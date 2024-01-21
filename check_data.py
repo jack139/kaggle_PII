@@ -78,7 +78,7 @@ def assemble(filename, max_len=500):
 
             text_break += 1            
 
-        #break # for test
+        break # for test
 
 
     print(f"total= {total}\ttext_break= {text_break}\ttmp_break= {tmp_break}")
