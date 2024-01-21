@@ -166,7 +166,7 @@ def __convert(indata, include_blank=True):
 
 
 
-def assemble(filename, max_len=512):
+def assemble(filename, max_len=500):
     total = text_break = tmp_break = 0
 
     data = json.load(open(filename))
@@ -177,15 +177,17 @@ def assemble(filename, max_len=512):
 
         text = ''
         tmp_text = ''
-        n = 0
+        n = n_text = n_tmp = 0
         while n<len(l['tokens']):
             token = l['tokens'][n]
             if l['trailing_whitespace'][n]:
                 token += ' ' 
 
-            if len(tmp_text) + len(token) > max_len:
+            if n_tmp + 1 > max_len:
                 text += tmp_text
                 tmp_text = ''
+                n_text += n_tmp
+                n_tmp = 0
 
                 tmp_break += 1
 
@@ -193,26 +195,31 @@ def assemble(filename, max_len=512):
                 #assert False, f"tmp_text is too long: {len(text)}, {len(tmp_text)}, {len(token)}"
                 
 
-            if len(text) + len(tmp_text) + len(token) > max_len:
-                assert len(text)>0, f"too long: {len(text)}, {len(tmp_text)}, {len(token)}"
-                #print(text)
-                #print('-'*20)
+            if n_text + n_tmp + 1 > max_len:
+                assert len(text)>0, f"too long: {n_text}, {n_tmp}"
+                print(text)
+                print('-'*20)
                 text = ''
+                n_text = 0
 
                 text_break += 1
 
             tmp_text += token
+            n_tmp += 1
 
             if token=='\n\n':
                 text += tmp_text
                 tmp_text = ''
+                n_text += n_tmp
+                n_tmp = 0
 
             n += 1
 
-        if len(text) + len(tmp_text) > 0:
+        if n_text + n_tmp > 0:
             text += tmp_text
-            #print(text)
-            #print('-'*20)
+            n_text += n_tmp
+            print(text)
+            print('-'*20)
 
             text_break += 1            
 
