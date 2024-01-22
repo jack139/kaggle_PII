@@ -22,9 +22,9 @@ learning_rate = 2e-5 # 6e-5, 2e-5
 categories = set()
 
 # bert配置
-config_path = '../../nlp_model/chinese_bert_L-12_H-768_A-12/bert_config.json'
-checkpoint_path = '../../nlp_model/chinese_bert_L-12_H-768_A-12/bert_model.ckpt'
-dict_path = '../../nlp_model/chinese_bert_L-12_H-768_A-12/vocab.txt'
+config_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/bert_config.json'
+checkpoint_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/bert_model.ckpt'
+dict_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/vocab.txt'
 
 def load_data(filename):
     """加载数据
@@ -217,6 +217,6 @@ if __name__ == '__main__':
         callbacks=[evaluator]
     )
 
-else:
-    model.load_weights('ckpt/imcs-ner-v2_gp_best_f1_0.89685.weights')
-    predict_to_file('../dataset/3.0/IMCS-V2/IMCS-V2_test.json', './IMCS-V2-NER_test.json')
+#else:
+#    model.load_weights('ckpt/imcs-ner-v2_gp_best_f1_0.89685.weights')
+#    predict_to_file('../dataset/3.0/IMCS-V2/IMCS-V2_test.json', './IMCS-V2-NER_test.json')
