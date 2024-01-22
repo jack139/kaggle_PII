@@ -1,12 +1,13 @@
 import os
 import random
 import json
+from tqdm import tqdm
 from copy import deepcopy
 
 train_file = 'data/pii-detection-removal-from-educational-data/train.json'
 test_file = 'data/pii-detection-removal-from-educational-data/test.json'
 
-split_ratio = 0.8
+split_ratio = 0.9
 
 '''
   {
@@ -90,13 +91,13 @@ def __convert(indata, include_blank=True):
 
 
 
-def assemble(infile, outfile_path, max_len=200):
+def assemble(infile, outfile_path, max_len=500, is_train=True):
     total = text_break = tmp_break = 0
     D = []
 
     data = json.load(open(infile))
-    for l in data:
-        print(f"---> {l['document']}")
+    for l in tqdm(data):
+        #print(f"---> {l['document']}")
 
         total += 1
 
@@ -118,10 +119,9 @@ def assemble(infile, outfile_path, max_len=200):
 
                 #print(text)
                 #assert False, f"tmp_text is too long: {len(text)}, {len(tmp_text)}, {len(token)}"
-                
 
             if n_text + n_tmp + 1 > max_len:
-                assert len(text)>0, f"too long: {n_text}, {n_tmp}"
+                assert n_text>0, f"too long: {n_text}, {n_tmp}, {max_len}"
                 #print(text)
                 #print('-'*20)
                 dd = __convert({
@@ -129,13 +129,17 @@ def assemble(infile, outfile_path, max_len=200):
                         'BIO_label' : [x[1] for x in text],
                     })
                 if dd:
+                    dd['document'] = l['document']
                     D.append(dd)
                 text = []
                 n_text = 0
 
                 text_break += 1
 
-            tmp_text += [(token, l['labels'][n])] # token, label
+            if is_train:
+                tmp_text += [(token, l['labels'][n])] # token, label
+            else:
+                tmp_text += [(token, 'O')] # token, blank-label
             n_tmp += 1
 
             if token=='\n\n':
@@ -156,6 +160,7 @@ def assemble(infile, outfile_path, max_len=200):
                     'BIO_label' : [x[1] for x in text],
                 })
             if dd:
+                dd['document'] = l['document']
                 D.append(dd)
 
             text_break += 1            
@@ -169,27 +174,39 @@ def assemble(infile, outfile_path, max_len=200):
 
     print(f"total= {total}\ttext_break= {text_break}\ttmp_break= {tmp_break}\tblank= {blank}")
 
-    random.shuffle(D)
+    if is_train:
+        random.shuffle(D)
 
-    # 拆分数据集
-    split_n = int(len(D) * split_ratio)
+        # 拆分数据集
+        split_n = int(len(D) * split_ratio)
 
-    json.dump(
-        D[:split_n],
-        open(os.path.join(outfile_path, "train.json"), 'w', encoding='utf-8'),
-        indent=4,
-        ensure_ascii=False
-    )
+        json.dump(
+            D[:split_n],
+            open(os.path.join(outfile_path, "train.json"), 'w', encoding='utf-8'),
+            indent=4,
+            ensure_ascii=False
+        )
 
 
-    json.dump(
-        D[split_n:],
-        open(os.path.join(outfile_path, "dev.json"), 'w', encoding='utf-8'),
-        indent=4,
-        ensure_ascii=False
-    )
+        json.dump(
+            D[split_n:],
+            open(os.path.join(outfile_path, "dev.json"), 'w', encoding='utf-8'),
+            indent=4,
+            ensure_ascii=False
+        )
 
-    print(f"train set: {split_n}\tdev set: {len(D)-split_n}")
+        print(f"train set: {split_n}\tdev set: {len(D)-split_n}")
+
+    else:
+        json.dump(
+            D,
+            open(os.path.join(outfile_path, "test.json"), 'w', encoding='utf-8'),
+            indent=4,
+            ensure_ascii=False
+        )
+
+        print(f"test set: {len(D)}")
 
 if __name__ == '__main__':
     assemble(train_file, 'data')
+    assemble(test_file, 'data', is_train=False)

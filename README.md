@@ -4,3 +4,9 @@
 
 Develop automated techniques to detect and remove PII from educational data.
 
+
+
+```bash
+python3.9 convert.py
+python3.9 NER_gp.py
+```

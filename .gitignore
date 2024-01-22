@@ -23,6 +23,7 @@ data/
 output/
 build/
 colab/
-*.weights
+*.weights*
+*.h5
 *.zip
 *.pt
