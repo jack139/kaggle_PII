@@ -178,10 +178,17 @@ class Evaluator(keras.callbacks.Callback):
 def predict_to_file(in_file, out_file):
     """预测到文件
     """
-    #D = {}
     data = json.load(open(in_file))
 
+    document = ""
+    last_pos = 0
+    D = []
+
     for d in tqdm(data, ncols=100):
+
+        if document != d['document']:
+            document = d['document']
+            last_pos = 0
 
         # 初始化 BIO 标记
         label = ['O']*len(d['tokens'])
@@ -195,25 +202,40 @@ def predict_to_file(in_file, out_file):
                 'type': e[2]
             })
 
-            # 生成 BIO标记
-            #label[e[0]] = 'B-'+e[2]
-            #for x in range(e[0]+1, e[1]+1):
-            #    label[x] = 'I-'+e[2]
-
-            pos = 0
+            # 生成 BIO标记, 依据 原始 tokens
+            pos = last = 0
             for n, x in enumerate(d['tokens']):
                 if pos >= e[0] and pos <= e[1]:
+                    if last==0:
+                        label[n] = 'B-'+e[2]
+                        last += 1
+                    else:
+                        label[n] = 'I-'+e[2]
+                    D.append((document, last_pos+n, label[n]))
+                else:
+                    last = 0
 
+                pos += len(x)
+
+                if pos > e[1]:
+                    break
 
         d['labels'] = label
+
+        last_pos += len(d['tokens'])
 
     # 保存json格式
     json.dump(
         data,
-        open(out_file, 'w', encoding='utf-8'),
+        open("data/output.json", 'w', encoding='utf-8'),
         indent=4,
         ensure_ascii=False
     )
+
+    with open(out_file, "w") as f:
+        f.write("row_id,document,token,label\n")
+        for n, x in enumerate(D):
+            f.write(f"{n},{x[0]},{x[1]},{x[2]}\n")
 
 
 if __name__ == '__main__':
@@ -232,4 +254,4 @@ if __name__ == '__main__':
 
 else:
     model.load_weights('ckpt/pii_gp_best_f1_0.75362.h5')
-    predict_to_file('data/test.json', 'data/output.json')
+    predict_to_file('data/test.json', 'data/submission.csv')
