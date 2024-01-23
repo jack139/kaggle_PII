@@ -184,7 +184,7 @@ def predict_to_file(in_file, out_file):
     for d in tqdm(data, ncols=100):
 
         # 初始化 BIO 标记
-        label = ['O']*len(d['text'])
+        label = ['O']*len(d['tokens'])
 
         # 识别
         entities = NER.recognize(d['text'])
@@ -196,11 +196,16 @@ def predict_to_file(in_file, out_file):
             })
 
             # 生成 BIO标记
-            label[e[0]] = 'B-'+e[2]
-            for x in range(e[0]+1, e[1]+1):
-                label[x] = 'I-'+e[2]
+            #label[e[0]] = 'B-'+e[2]
+            #for x in range(e[0]+1, e[1]+1):
+            #    label[x] = 'I-'+e[2]
 
-        #D[d][d2['sentence_id']] = ' '.join(label)
+            pos = 0
+            for n, x in enumerate(d['tokens']):
+                if pos >= e[0] and pos <= e[1]:
+
+
+        d['labels'] = label
 
     # 保存json格式
     json.dump(

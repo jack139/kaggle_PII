@@ -130,6 +130,7 @@ def assemble(infile, outfile_path, max_len=500, is_train=True):
                     })
                 if dd:
                     dd['document'] = l['document']
+                    dd['tokens'] = [x[0] for x in text]
                     D.append(dd)
                 text = []
                 n_text = 0
@@ -161,6 +162,7 @@ def assemble(infile, outfile_path, max_len=500, is_train=True):
                 })
             if dd:
                 dd['document'] = l['document']
+                dd['tokens'] = [x[0] for x in text]
                 D.append(dd)
 
             text_break += 1            
@@ -208,5 +210,5 @@ def assemble(infile, outfile_path, max_len=500, is_train=True):
         print(f"test set: {len(D)}")
 
 if __name__ == '__main__':
-    assemble(train_file, 'data')
+    #assemble(train_file, 'data')
     assemble(test_file, 'data', is_train=False)
