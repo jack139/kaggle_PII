@@ -7,7 +7,10 @@ from copy import deepcopy
 train_file = 'data/pii-detection-removal-from-educational-data/train.json'
 test_file = 'data/pii-detection-removal-from-educational-data/test.json'
 
-split_ratio = 0.9
+train_43k = 'data/train_43k.json'
+
+split_ratio = 0.8
+
 
 '''
   {
@@ -31,7 +34,7 @@ split_ratio = 0.9
 '''
 
 
-def __convert(indata, include_blank=True):
+def __convert(indata, include_blank=False):
 
     text = ''
     entities = []
@@ -91,7 +94,7 @@ def __convert(indata, include_blank=True):
 
 
 
-def assemble(infile, outfile_path, max_len=500, is_train=True):
+def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=False):
     total = text_break = tmp_break = 0
     D = []
 
@@ -127,10 +130,11 @@ def assemble(infile, outfile_path, max_len=500, is_train=True):
                 dd = __convert({
                         'sentence'  : [x[0] for x in text],
                         'BIO_label' : [x[1] for x in text],
-                    })
+                    }, include_blank=include_blank)
                 if dd:
-                    dd['document'] = l['document']
-                    dd['tokens'] = [x[0] for x in text]
+                    if not is_train:
+                        dd['document'] = l['document']
+                        dd['tokens'] = [x[0] for x in text]
                     D.append(dd)
                 text = []
                 n_text = 0
@@ -159,10 +163,11 @@ def assemble(infile, outfile_path, max_len=500, is_train=True):
             dd = __convert({
                     'sentence'  : [x[0] for x in text],
                     'BIO_label' : [x[1] for x in text],
-                })
+                }, include_blank=include_blank)
             if dd:
-                dd['document'] = l['document']
-                dd['tokens'] = [x[0] for x in text]
+                if not is_train:
+                    dd['document'] = l['document']
+                    dd['tokens'] = [x[0] for x in text]
                 D.append(dd)
 
             text_break += 1            
@@ -171,7 +176,7 @@ def assemble(infile, outfile_path, max_len=500, is_train=True):
 
     blank = 0
     for x in D:
-        if len(x['entities']):
+        if len(x['entities'])==0:
             blank += 1
 
     print(f"total= {total}\ttext_break= {text_break}\ttmp_break= {tmp_break}\tblank= {blank}")
@@ -182,8 +187,13 @@ def assemble(infile, outfile_path, max_len=500, is_train=True):
         # 拆分数据集
         split_n = int(len(D) * split_ratio)
 
+        # 增加外部数据
+        data_43k = json.load(open(train_43k))
+        data_43k += D[:split_n]
+        random.shuffle(data_43k)
+
         json.dump(
-            D[:split_n],
+            data_43k,
             open(os.path.join(outfile_path, "train.json"), 'w', encoding='utf-8'),
             indent=4,
             ensure_ascii=False
@@ -197,7 +207,7 @@ def assemble(infile, outfile_path, max_len=500, is_train=True):
             ensure_ascii=False
         )
 
-        print(f"train set: {split_n}\tdev set: {len(D)-split_n}")
+        print(f"train set: {len(data_43k)}\tdev set: {len(D)-split_n}")
 
     else:
         json.dump(
@@ -210,5 +220,5 @@ def assemble(infile, outfile_path, max_len=500, is_train=True):
         print(f"test set: {len(D)}")
 
 if __name__ == '__main__':
-    #assemble(train_file, 'data')
+    assemble(train_file, 'data', include_blank=False)
     assemble(test_file, 'data', is_train=False)

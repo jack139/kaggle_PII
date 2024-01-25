@@ -20,7 +20,7 @@ from tqdm import tqdm
 
 maxlen = 512
 epochs = 30
-batch_size = 8
+batch_size = 16
 learning_rate = 2e-5
 categories = set()
 

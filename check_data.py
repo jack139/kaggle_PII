@@ -2,6 +2,8 @@ import json
 
 train_file = 'data/pii-detection-removal-from-educational-data/train.json'
 test_file = 'data/pii-detection-removal-from-educational-data/test.json'
+file_43k = 'data/external/english_pii_43k.jsonl'
+
 
 def load_data(filename, text_name='full_text'):
     """加载数据
@@ -9,16 +11,22 @@ def load_data(filename, text_name='full_text'):
     """
     max_len = 0    
     max_cnt = 0
+    total = 0
 
-    data = json.load(open(filename))
+    #data = json.load(open(filename))
 
-    for l in data:
-        if len(l[text_name])>512:
-            print(len(l[text_name]), l[text_name][:10])
-            max_cnt += 1
-        if len(l[text_name])>max_len:
-            max_len = len(l[text_name])
-    return max_len, max_cnt, len(data)
+    with open(filename) as f:
+        for l in f:
+            l = json.loads(l)
+
+            total += 1
+            if len(l[text_name])>500:
+                print(len(l[text_name]), l[text_name][:10])
+                max_cnt += 1
+            if len(l[text_name])>max_len:
+                max_len = len(l[text_name])
+
+    return max_len, max_cnt, total
 
 
 def assemble(filename, max_len=500):
@@ -85,8 +93,8 @@ def assemble(filename, max_len=500):
 
 
 if __name__ == '__main__':
-    #print('train:', load_data(train_file))
-    #print('test:', load_data(test_file))
 
-    assemble(train_file)
+    #assemble(train_file)
     #assemble(test_file)
+
+    load_data(file_43k, "tokenised_text")
