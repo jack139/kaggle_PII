@@ -47,6 +47,7 @@ def load_data(filename):
 
 # 标注数据
 train_data = load_data('data/train.json')
+#train_data = load_data('data/train_43k.json')
 valid_data = load_data('data/dev.json')
 categories = list(sorted(categories))
 
@@ -205,7 +206,7 @@ def predict_to_file(in_file, out_file):
             # 生成 BIO标记, 依据 原始 tokens
             pos = last = 0
             for n, x in enumerate(d['tokens']):
-                if pos >= e[0] and pos <= e[1]:
+                if pos >= e[0] and pos <= e[1]+1:
                     if last==0:
                         label[n] = 'B-'+e[2]
                         last += 1
@@ -238,12 +239,39 @@ def predict_to_file(in_file, out_file):
             f.write(f"{n},{x[0]},{x[1]},{x[2]}\n")
 
 
+def evl_to_file(in_file, out_file):
+    """预测到文件
+    """
+    data = json.load(open(in_file))
+
+    for d in tqdm(data, ncols=100):
+        d['entities_2'] = []
+
+        # 识别
+        entities = NER.recognize(d['text'])
+        for e in entities:
+            d['entities_2'].append({
+                'start_idx': e[0],
+                'end_idx': e[1],
+                'type': e[2],
+                'entity': d['text'][e[0]:e[1]+1]
+            })
+
+    # 保存json格式
+    json.dump(
+        data,
+        open(out_file, 'w', encoding='utf-8'),
+        indent=4,
+        ensure_ascii=False
+    )
+
+
 if __name__ == '__main__':
 
     evaluator = Evaluator()
     train_generator = data_generator(train_data, batch_size)
 
-    #model.load_weights('ckpt/pii_gp_best_f1_0.75362.h5')
+    #model.load_weights('ckpt/pii_gp_best_f1_0.92476.h5')
 
     model.fit(
         train_generator.forfit(),
@@ -253,5 +281,6 @@ if __name__ == '__main__':
     )
 
 else:
-    model.load_weights('ckpt/pii_gp_best_f1_0.75362.h5')
-    predict_to_file('data/test.json', 'data/submission.csv')
+    model.load_weights('ckpt/pii_gp_best_f1_0.92476.h5')
+    #predict_to_file('data/test.json', 'data/submission.csv')
+    evl_to_file('data/dev.json', 'data/output.json')

@@ -7,7 +7,7 @@ from copy import deepcopy
 train_file = 'data/pii-detection-removal-from-educational-data/train.json'
 test_file = 'data/pii-detection-removal-from-educational-data/test.json'
 
-train_43k = 'data/train_43k.json'
+train_43k = 'data/dataset_43k.json'
 
 split_ratio = 0.8
 
@@ -49,9 +49,9 @@ def __convert(indata, include_blank=False):
             if etype!='':
                 entities.append({
                     "start_idx": len(''.join(text[:start_idx])),
-                    "end_idx": len(''.join(text[:all_idx])) - 1,
+                    "end_idx": len((''.join(text[:all_idx])).rstrip()) - 1, # rstrio() 去掉右侧的空格
                     "type": etype,
-                    "entity": ''.join(text[start_idx:all_idx]),
+                    "entity": (''.join(text[start_idx:all_idx])).rstrip(),
                 })
             start_idx = 0
             etype = ''
@@ -59,9 +59,9 @@ def __convert(indata, include_blank=False):
             if etype!='':
                 entities.append({
                     "start_idx": len(''.join(text[:start_idx])),
-                    "end_idx": len(''.join(text[:all_idx])) - 1,
+                    "end_idx": len((''.join(text[:all_idx])).rstrip()) - 1,
                     "type": etype,
-                    "entity": ''.join(text[start_idx:all_idx]),
+                    "entity": (''.join(text[start_idx:all_idx])).rstrip(),
                 })                
             start_idx = all_idx
             etype = label.split('-')[1]
@@ -77,9 +77,9 @@ def __convert(indata, include_blank=False):
     if etype!='':
         entities.append({
             "start_idx": len(''.join(text[:start_idx])),
-            "end_idx": len(''.join(text[:all_idx])) - 1,
+            "end_idx": len((''.join(text[:all_idx])).rstrip()) - 1,
             "type": etype,
-            "entity": ''.join(text[start_idx:all_idx]),
+            "entity": (''.join(text[start_idx:all_idx])).rstrip(),
         })
 
     # 加入数据集
@@ -132,8 +132,8 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
                         'BIO_label' : [x[1] for x in text],
                     }, include_blank=include_blank)
                 if dd:
+                    dd['document'] = l['document']
                     if not is_train:
-                        dd['document'] = l['document']
                         dd['tokens'] = [x[0] for x in text]
                     D.append(dd)
                 text = []
@@ -165,8 +165,8 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
                     'BIO_label' : [x[1] for x in text],
                 }, include_blank=include_blank)
             if dd:
+                dd['document'] = l['document']
                 if not is_train:
-                    dd['document'] = l['document']
                     dd['tokens'] = [x[0] for x in text]
                 D.append(dd)
 
@@ -194,11 +194,17 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
 
         json.dump(
             data_43k,
-            open(os.path.join(outfile_path, "train.json"), 'w', encoding='utf-8'),
+            open(os.path.join(outfile_path, "train_43k.json"), 'w', encoding='utf-8'),
             indent=4,
             ensure_ascii=False
         )
 
+        json.dump(
+            D[:split_n],
+            open(os.path.join(outfile_path, "train.json"), 'w', encoding='utf-8'),
+            indent=4,
+            ensure_ascii=False
+        )
 
         json.dump(
             D[split_n:],
@@ -220,5 +226,5 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
         print(f"test set: {len(D)}")
 
 if __name__ == '__main__':
-    assemble(train_file, 'data', include_blank=False)
+    assemble(train_file, 'data', include_blank=True)
     assemble(test_file, 'data', is_train=False)

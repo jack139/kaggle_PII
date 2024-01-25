@@ -94,6 +94,7 @@ def assemble(infile, outfile_path, max_len=500, include_blank=False):
                 if _label not in to_labels.keys():
                     continue
 
+                # 转换 label
                 _label = to_labels[_label]
                 L.add(_label)
 
@@ -112,14 +113,49 @@ def assemble(infile, outfile_path, max_len=500, include_blank=False):
 
             #break # for test
 
+    # 处理 entities
+    for d in D:
+        d['entities'] = sorted(d['entities'], key=lambda x: x['start_idx'], reverse=False)
+        new_e = []
+        last_label = None
+        last_end = -100
+        last_entity = None
+        for e in d['entities']:
+            if e['type'] != last_label:
+                if last_entity is not None:
+                    new_e.append(last_entity)
+                last_entity = deepcopy(e)
+                last_label = e['type']
+                last_end = e['end_idx']
+            else:
+                if last_end == e['start_idx'] - 2:
+                    last_entity['end_idx'] = last_end = e['end_idx']
+                    last_entity['entity'] += (' ' + e['entity'])
+                elif last_label=='STREET_ADDRESS' and d['text'][last_end+1]==',' and last_end == e['start_idx'] - 3:
+                    last_entity['end_idx'] = last_end = e['end_idx']
+                    last_entity['entity'] += (', ' + e['entity'])
+                else:
+                    new_e.append(last_entity)
+                    last_entity = deepcopy(e)
+                    last_end = e['end_idx']
+
+        new_e.append(last_entity)
+        d['entities'] = []
+        for x in new_e:
+            if x['type']=='STREET_ADDRESS' and x['entity'].isdigit():
+                continue
+            else:
+                d['entities'].append(x)
+
+    D = [d for d in D if len(d['entities'])>0]
 
     print(list(L))
 
-    print(f"total= {total}")
+    print(f"total= {total}\t D= {len(D)}")
 
     json.dump(
         D,
-        open(os.path.join(outfile_path, "train_43k.json"), 'w', encoding='utf-8'),
+        open(os.path.join(outfile_path, "dataset_43k.json"), 'w', encoding='utf-8'),
         indent=4,
         ensure_ascii=False
     )
