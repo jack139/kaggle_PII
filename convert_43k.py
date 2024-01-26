@@ -4,6 +4,8 @@ import json
 from tqdm import tqdm
 from copy import deepcopy
 
+# 来源: https://huggingface.co/datasets/ai4privacy/pii-masking-200k/blob/main/english_pii_43k.jsonl
+
 file_43k = 'data/external/english_pii_43k.jsonl'
 
 
