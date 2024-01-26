@@ -98,11 +98,11 @@ def global_pointer_crossentropy(y_true, y_pred):
     return K.mean(multilabel_categorical_crossentropy(y_true, y_pred))
 
 
-def global_pointer_f1_score(y_true, y_pred):
+def global_pointer_f1_score(y_true, y_pred, epsilon=1e-10):
     """给GlobalPointer设计的F1
     """
     y_pred = K.cast(K.greater(y_pred, 0), K.floatx())
-    return 2 * K.sum(y_true * y_pred) / K.sum(y_true + y_pred)
+    return 2 * K.sum(y_true * y_pred) / (K.sum(y_true + y_pred) + epsilon)
 
 
 model = build_transformer_model(config_path, checkpoint_path)
@@ -271,7 +271,7 @@ if __name__ == '__main__':
     evaluator = Evaluator()
     train_generator = data_generator(train_data, batch_size)
 
-    #model.load_weights('ckpt/pii_gp_best_f1_0.92476.h5')
+    #model.load_weights('ckpt/pii_gp_best_f1_0.92476_noblank.h5')
 
     model.fit(
         train_generator.forfit(),
