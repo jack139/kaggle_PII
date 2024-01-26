@@ -6,12 +6,14 @@ os.environ["TF_KERAS"] = "1" # use tf 2.7 keras
 
 import json
 import numpy as np
+import unicodedata
+from bert4keras.snippets import is_py2
 from bert4keras.backend import keras, K
 from bert4keras.backend import multilabel_categorical_crossentropy
 #from bert4keras.layers import GlobalPointer
 from bert4keras.layers import EfficientGlobalPointer as GlobalPointer
 from bert4keras.models import build_transformer_model
-from bert4keras.tokenizers import Tokenizer
+from bert4keras.tokenizers import SpTokenizer#, Tokenizer
 from bert4keras.optimizers import Adam, extend_with_exponential_moving_average
 from bert4keras.snippets import sequence_padding, DataGenerator
 from bert4keras.snippets import open, to_array
@@ -20,20 +22,18 @@ from tqdm import tqdm
 
 maxlen = 512
 epochs = 30
-batch_size = 16 # 16 for base / 4 for large
+batch_size = 4
 learning_rate = 2e-5
 categories = set()
 
 # bert配置
-config_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/bert_config.json'
-checkpoint_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/bert_model.ckpt'
-dict_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/vocab.txt'
 
-'''
-config_path = '../nlp_model/bert_wwm_uncased_L-24_H-1024_A-16/bert_config.json'
-checkpoint_path = '../nlp_model/bert_wwm_uncased_L-24_H-1024_A-16/bert_model.ckpt'
-dict_path = '../nlp_model/bert_wwm_uncased_L-24_H-1024_A-16/vocab.txt'
-'''
+config_path = '../nlp_model/albert_base_v2/albert_config.json'
+checkpoint_path = '../nlp_model/albert_base_v2/model.ckpt-best'
+#dict_path = '../nlp_model/albert_base_v2/30k-clean.vocab'
+spm_path = '../nlp_model/albert_base_v2/30k-clean.model'
+
+
 
 def load_data(filename):
     """加载数据
@@ -61,8 +61,105 @@ print("labels: ", categories)
 # labels:  ['EMAIL', 'ID_NUM', 'NAME_STUDENT', 'PHONE_NUM', 'STREET_ADDRESS', 'URL_PERSONAL', 'USERNAME']
 
 
+# 自定义Tokenizer, 实现 rematch
+class MySpTokenizer(SpTokenizer):
+    def __init__(self, sp_model_path, **kwargs):
+        super(MySpTokenizer, self).__init__(sp_model_path, **kwargs)
+
+    @staticmethod
+    def _is_control(ch):
+        """控制类字符判断
+        """
+        return unicodedata.category(ch) in ('Cc', 'Cf')
+
+    @staticmethod
+    def stem(token):
+        """获取token的“词干”（如果是"▁"开头，则自动去掉"▁"）
+        """
+        if token[:1] == '▁':
+            return token[1:]
+        elif token[:1] == '\xad':
+            return token[1:]
+        else:
+            return token
+
+    @staticmethod
+    def _is_special2(ch):
+        """判断是不是有特殊含义的符号
+        """
+        return bool(ch) and (ch[0] == '[') and (ch[-1] == ']')
+
+    def rematch(self, text, tokens):
+        """给出原始的text和tokenize后的tokens的映射关系
+        """
+        if is_py2:
+            text = unicode(text)
+
+        #if self._do_lower_case:
+        #    text = text.lower()
+
+        normalized_text, char_mapping = '', []
+        for i, ch in enumerate(text):
+            #if self._do_lower_case:
+            #    ch = lowercase_and_normalize(ch)
+            ch = ''.join([
+                c for c in ch
+                if not (ord(c) == 0 or ord(c) == 0xfffd or self._is_control(c))
+            ])
+            normalized_text += ch
+            char_mapping.extend([i] * len(ch))
+
+        text, token_mapping, offset = normalized_text, [], 0
+        for n, token in enumerate(tokens):
+            if self._is_special2(token):
+                token_mapping.append([])
+            else:
+                token = self.stem(token)
+
+                skip_offset = False
+
+                # 处理 '…'
+                if n+2<len(tokens) and ''.join(tokens[n:n+3])=='...' and '…' in text[offset:offset+3]:
+                    search_token = '…'
+                    skip_offset = True
+                elif n+1<len(tokens) and ''.join(tokens[n-1:n+2])=='...' and '…' in text[offset:offset+3]:
+                    search_token = '…'
+                    skip_offset = True
+                elif n<len(tokens) and ''.join(tokens[n-2:n+1])=='...' and '…' in text[offset:offset+2]:
+                    search_token = '…'
+                elif n+1<len(tokens) and ''.join(tokens[n:n+2])=='Rs' and '₨' in text[offset:offset+2]:
+                    search_token = '₨'
+                    skip_offset = True
+                elif n<len(tokens) and ''.join(tokens[n-1:n+1])=='Rs' and '₨' in text[offset:offset+2]:
+                    search_token = '₨'
+                elif '́' in token:
+                    search_token = token.replace('́', '´')
+                elif 'ریال' in token:
+                    search_token = token.replace('ریال', '﷼')
+                elif 'fi' in token and 'ﬁ' in text[offset:offset+20]:
+                    search_token = token.replace('fi', 'ﬁ')
+                elif 'fl' in token and 'ﬂ' in text[offset:offset+20]:
+                    search_token = token.replace('fl', 'ﬂ')
+                elif 'ff' in token and 'ﬀ' in text[offset:offset+20]:
+                    search_token = token.replace('ff', 'ﬀ')
+                else:
+                    search_token = token
+
+                print(f"2 ---> {offset}")
+                print(f"3 ---> [{token}]")
+                print(f"4 ---> [{search_token}]")
+
+                start = text[offset:].index(search_token) + offset
+
+                if not skip_offset:
+                    end = start + len(search_token)
+                token_mapping.append(char_mapping[start:end])
+                offset = end
+
+        return token_mapping
+
 # 建立分词器
-tokenizer = Tokenizer(dict_path, do_lower_case=True)
+tokenizer = MySpTokenizer(spm_path)
 
 
 class data_generator(DataGenerator):
@@ -72,7 +169,12 @@ class data_generator(DataGenerator):
         batch_token_ids, batch_segment_ids, batch_labels = [], [], []
         for is_end, d in self.sample(random):
             tokens = tokenizer.tokenize(d[0], maxlen=maxlen)
-            mapping = tokenizer.rematch(d[0], tokens)
+            try:
+                mapping = tokenizer.rematch(d[0], tokens)
+            except Exception as e:
+                print(f"-----> [{d[0]}]")
+                raise e
+            
             start_mapping = {j[0]: i for i, j in enumerate(mapping) if j}
             end_mapping = {j[-1]: i for i, j in enumerate(mapping) if j}
             token_ids = tokenizer.tokens_to_ids(tokens)
@@ -111,7 +213,7 @@ def global_pointer_f1_score(y_true, y_pred, epsilon=1e-10):
     return 2 * K.sum(y_true * y_pred) / (K.sum(y_true + y_pred) + epsilon)
 
 
-model = build_transformer_model(config_path, checkpoint_path)
+model = build_transformer_model(config_path, checkpoint_path, model='albert')
 output = GlobalPointer(len(categories), 64)(model.output)
 
 AdamEMA = extend_with_exponential_moving_average(Adam, name='AdamEMA')
@@ -175,7 +277,7 @@ class Evaluator(keras.callbacks.Callback):
         # 保存最优
         if f1 >= self.best_val_f1:
             self.best_val_f1 = f1
-            model.save_weights('ckpt/pii_gp_best_f1_%.5f.h5'%f1)
+            model.save_weights('ckpt/pii_albert_gp_best_f1_%.5f.h5'%f1)
         print(
             'valid:  f1: %.5f, precision: %.5f, recall: %.5f, best f1: %.5f\n' %
             (f1, precision, recall, self.best_val_f1)
@@ -276,6 +378,9 @@ if __name__ == '__main__':
 
     evaluator = Evaluator()
     train_generator = data_generator(train_data, batch_size)
+
+    while True:
+        next(train_generator.forfit())
 
     #model.load_weights('ckpt/pii_gp_best_f1_0.92476_noblank.h5')
 
