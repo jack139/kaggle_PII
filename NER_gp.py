@@ -53,8 +53,8 @@ def load_data(filename):
 
 # 标注数据
 #train_data = load_data('data/train.json')
-train_data = load_data('data/noblank/train_43k.json')
-valid_data = load_data('data/noblank/dev.json')
+train_data = load_data('data/train_43k.json')
+valid_data = load_data('data/dev.json')
 categories = list(sorted(categories))
 
 print("labels: ", categories)

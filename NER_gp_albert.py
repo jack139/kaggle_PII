@@ -22,17 +22,20 @@ from tqdm import tqdm
 
 maxlen = 512
 epochs = 30
-batch_size = 16
+batch_size = 4 # 16 for base, 4 for xxlarge
 learning_rate = 2e-5
 categories = set()
 
 # bert配置
-
+'''
 config_path = '../nlp_model/albert_base_v2/albert_config.json'
 checkpoint_path = '../nlp_model/albert_base_v2/model.ckpt-best'
 #dict_path = '../nlp_model/albert_base_v2/30k-clean.vocab'
 spm_path = '../nlp_model/albert_base_v2/30k-clean.model'
-
+'''
+config_path = '../nlp_model/albert_xxlarge_v2/albert_config.json'
+checkpoint_path = '../nlp_model/albert_xxlarge_v2/model.ckpt-best'
+spm_path = '../nlp_model/albert_xxlarge_v2/30k-clean.model'
 
 
 def load_data(filename):
@@ -245,9 +248,12 @@ class NamedEntityRecognizer(object):
         scores[:, :, [0, -1]] -= np.inf
         entities = []
         for l, start, end in zip(*np.where(scores > threshold)):
-            entities.append(
-                (mapping[start][0], mapping[end][-1], categories[l])
-            )
+            if l>len(categories):
+                print("categories out:", len(categories), l)
+            else:
+                entities.append(
+                    (mapping[start][0], mapping[end][-1], categories[l])
+                )
         return entities
 
 
@@ -381,10 +387,7 @@ if __name__ == '__main__':
     evaluator = Evaluator()
     train_generator = data_generator(train_data, batch_size)
 
-    #for _ in tqdm(range(len(train_generator))):
-    #    next(train_generator.forfit())
-
-    #model.load_weights('ckpt/pii_gp_best_f1_0.92476_noblank.h5')
+    #model.load_weights('ckpt/pii_albert_gp_best_f1_0.82844.h5')
 
     model.fit(
         train_generator.forfit(),
