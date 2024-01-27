@@ -108,7 +108,10 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
         tmp_text = []
         n = n_text = n_tmp = 0
         while n<len(l['tokens']):
-            token = l['tokens'][n]
+            token = l['tokens'][n].replace('…', '.').replace('´', "'").replace('²', '2')\
+                .replace('΅', "'").replace('¨', "'").replace(';', ';').replace('．', '.')\
+                .replace('³', '3').replace('‑', '-').replace('¹', '1').replace('½', '1')\
+                .replace('¾', '1').replace('¼', '1').replace('\xad', '-')
             if l['trailing_whitespace'][n]:
                 token += ' ' 
 
@@ -133,8 +136,8 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
                     }, include_blank=include_blank)
                 if dd:
                     dd['document'] = l['document']
-                    if not is_train:
-                        dd['tokens'] = [x[0] for x in text]
+                    #if not is_train:
+                    dd['tokens'] = [x[0] for x in text]
                     D.append(dd)
                 text = []
                 n_text = 0
@@ -166,8 +169,8 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
                 }, include_blank=include_blank)
             if dd:
                 dd['document'] = l['document']
-                if not is_train:
-                    dd['tokens'] = [x[0] for x in text]
+                #if not is_train:
+                dd['tokens'] = [x[0] for x in text]
                 D.append(dd)
 
             text_break += 1            
@@ -226,5 +229,5 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
         print(f"test set: {len(D)}")
 
 if __name__ == '__main__':
-    assemble(train_file, 'data', include_blank=True)
+    assemble(train_file, 'data', include_blank=False)
     assemble(test_file, 'data', is_train=False)

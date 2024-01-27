@@ -11,6 +11,16 @@ class MySpTokenizer(SpTokenizer):
     def __init__(self, sp_model_path, **kwargs):
         super(MySpTokenizer, self).__init__(sp_model_path, **kwargs)
 
+        self._stranges = [
+            ('ﬄ', 'ffl'),
+            ('ﬃ', 'ffi'),
+            ('ﬂ', 'fl'),
+            ('ﬁ', 'fi'),
+            ('ﬀ', 'ff'),
+            ('™', 'TM'),
+            ('№', 'No'),
+        ]
+
     @staticmethod
     def _is_control(ch):
         """控制类字符判断
@@ -64,27 +74,26 @@ class MySpTokenizer(SpTokenizer):
             else:
                 token = self.stem(token)
 
-                skip_offset = False
+                search_token = token
 
+                span = len(token)
+
+                # 处理 奇怪的符号
+                for strange in self._stranges:
+                    if strange[0] in (text[offset:].lstrip())[:span]:
+                        if strange[1] in token:
+                            search_token = token.replace(strange[1], strange[0])
+                        elif token[:-len(strange[1])+1]+strange[0] in (text[offset:].lstrip())[:span]:
+                            search_token = token[:-len(strange[1])+1]
+                        elif strange[0]+token[1:] == text[offset:offset+len(token)]:
+                            search_token = strange[0] + token[1:]
+                        elif token == strange[1][-len(strange[1])+1] + (text[offset:].lstrip())[len(strange[1])-1:len(token)]:
+                            search_token = strange[0] + token[len(strange[1])-1:]
+                        break
+
+                '''
                 # 处理 '…'
-                if n+2<len(tokens) and ''.join(tokens[n:n+3])=='...' and '…' in text[offset:offset+3]:
-                    search_token = '…'
-                    skip_offset = True
-                elif n+1<len(tokens) and ''.join(tokens[n-1:n+2])=='...' and '…' in text[offset:offset+3]:
-                    search_token = '…'
-                    skip_offset = True
-                elif n<len(tokens) and ''.join(tokens[n-2:n+1])=='...' and '…' in text[offset:offset+2]:
-                    search_token = '…'
-                elif n+1<len(tokens) and ''.join(tokens[n:n+2])=='Rs' and '₨' in text[offset:offset+2]:
-                    search_token = '₨'
-                    skip_offset = True
-                elif n<len(tokens) and ''.join(tokens[n-1:n+1])=='Rs' and '₨' in text[offset:offset+2]:
-                    search_token = '₨'
-                elif '́' in token:
-                    search_token = token.replace('́', '´')
-                elif 'ریال' in token:
-                    search_token = token.replace('ریال', '﷼')
-                elif 'fi' in token and 'ﬁ' in text[offset:offset+20]:
+                if 'fi' in token and 'ﬁ' in text[offset:offset+20]:
                     search_token = token.replace('fi', 'ﬁ')
                 elif 'fl' in token and 'ﬂ' in text[offset:offset+20]:
                     search_token = token.replace('fl', 'ﬂ')
@@ -92,34 +101,38 @@ class MySpTokenizer(SpTokenizer):
                     search_token = token.replace('ff', 'ﬀ')
                 else:
                     search_token = token
+                '''
 
                 print(f"2 ---> {offset}")
                 print(f"3 ---> [{token}]")
                 print(f"4 ---> [{search_token}]")
+                print(f"5 ---> [{text[offset:offset+20]}]")
 
                 start = text[offset:].index(search_token) + offset
 
-                if not skip_offset:
-                    end = start + len(search_token)
+                end = start + len(search_token)
                 token_mapping.append(char_mapping[start:end])
                 offset = end
 
         return token_mapping
 
+
+    def token_to_text(self, tokens):
+        return self.sp_model.decode_pieces(tokens)
+
+
 spm_path = '../nlp_model/albert_base_v2/30k-clean.model'
 
 tokenizer = MySpTokenizer(spm_path)
 
-#text = "A suspicious login was detected on user 50855527 which used IP address e55a:0e26:37ec:ebaa:e4b4:aa03:a9e8:de11. The tool 'Education Measure Lite' was in use at 3:30 PM. Please confirm."
 
-#text = "A… …suspicious … \n\n login was detected\n\non …user 50855527 which\n\n"
 
-#text = "Obesity-induced ailment has been linked to altered hormonal patterns. To further explore the issue, make a deposit of ₨... to 34320673 named Personal Loan Account."
+text = """
+We talked after the brieﬁng and we agreed that we could`t
 
-#text = "Alessandro Giorgio\n\nDesign\t\r  Thinking\t\r  Innovation\t\r  -­‐\t\r  Mind\t\r  Mapping\n\n"
+"""
 
-#text = """In 2011 a colleague and I embarked in a difﬁcult task, building the most advanced"""
-text = "DESIGN THINKING ASSINGMENT\n\nDARDEN BUSINESS SCHOOL – COURSERA\n\nOFF-GRID REFRIGERATION CHALLENGE IN ABUJA-NIGERIA\n\nHabibu George\n\nAbuja, October 30, 2016\n\nCONTENTS\n\n1. CHALLENGE; Market penetration  ……………………………………………  3\n\n2. TOOL SELECTED; Learning Launches …………………………………..........  3\n\n3. APPLICATION and INSIGHTS ……………………………………………………..  3\n\n4. APPROACH  ………………………………………………………………..….. ..  4\n\nCHALLENGE; Market penetration\n\nPower is a significant challenge in Nigeria. In about two decades this nation has expended  over twenty billion U.S. Dollars yet our total power output is about Five thousand  megawatts. This is a country with a population of about a hundred and seventy million  people occupying about a million square kilometres of land. Many people need power to  run their fridges, freezers, air conditioning etc but this lack of it created a challenge and an  opportunity. So we set up a factory to produce blocks of ice that we could provide the  people in our state to use in meeting some of their refrigeration needs. Because of the  burning nature of the need and huge population we believed this would be a no brainer  and would hit the market in a huge wave. This did not happen. As a matter of fact, we  struggled to make sales of 20 blocks a day from a 1000 block a day factory. This was not  sustainable and we had to take significant action and fast if were not going to shelve the  business.    This way we would get hard facts on why the market was reacting with such poor reception  to a product that was designed (as we thought) to meet an ardent refrigeration need.\n\nTOOL SELECTED; Learning Launches\n\n"
+
 
 tokens = tokenizer.tokenize(text, maxlen=512)
 
@@ -129,3 +142,5 @@ print(tokens)
 
 mapping = tokenizer.rematch(text, tokens)
 print(mapping)
+
+#print(tokenizer.token_to_text(tokens))

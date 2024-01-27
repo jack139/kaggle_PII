@@ -22,7 +22,7 @@ from tqdm import tqdm
 
 maxlen = 512
 epochs = 30
-batch_size = 4
+batch_size = 16
 learning_rate = 2e-5
 categories = set()
 
@@ -53,8 +53,8 @@ def load_data(filename):
 
 # 标注数据
 #train_data = load_data('data/train.json')
-train_data = load_data('data/noblank/train_43k.json')
-valid_data = load_data('data/noblank/dev.json')
+train_data = load_data('data/train_43k.json')
+valid_data = load_data('data/dev.json')
 categories = list(sorted(categories))
 
 print("labels: ", categories)
@@ -65,6 +65,16 @@ print("labels: ", categories)
 class MySpTokenizer(SpTokenizer):
     def __init__(self, sp_model_path, **kwargs):
         super(MySpTokenizer, self).__init__(sp_model_path, **kwargs)
+
+        self._stranges = [
+            ('ﬄ', 'ffl'),
+            ('ﬃ', 'ffi'),
+            ('ﬂ', 'fl'),
+            ('ﬁ', 'fi'),
+            ('ﬀ', 'ff'),
+            ('™', 'TM'),
+            ('№', 'No'),
+        ]
 
     @staticmethod
     def _is_control(ch):
@@ -116,45 +126,37 @@ class MySpTokenizer(SpTokenizer):
             else:
                 token = self.stem(token)
 
-                skip_offset = False
+                search_token = token
 
-                # 处理 '…'
-                if n+2<len(tokens) and ''.join(tokens[n:n+3])=='...' and '…' in text[offset:offset+3]:
-                    search_token = '…'
-                    skip_offset = True
-                elif n+1<len(tokens) and ''.join(tokens[n-1:n+2])=='...' and '…' in text[offset:offset+3]:
-                    search_token = '…'
-                    skip_offset = True
-                elif n<len(tokens) and ''.join(tokens[n-2:n+1])=='...' and '…' in text[offset:offset+2]:
-                    search_token = '…'
-                elif n+1<len(tokens) and ''.join(tokens[n:n+2])=='Rs' and '₨' in text[offset:offset+2]:
-                    search_token = '₨'
-                    skip_offset = True
-                elif n<len(tokens) and ''.join(tokens[n-1:n+1])=='Rs' and '₨' in text[offset:offset+2]:
-                    search_token = '₨'
-                elif '́' in token:
-                    search_token = token.replace('́', '´')
-                elif 'ریال' in token:
-                    search_token = token.replace('ریال', '﷼')
-                elif 'fi' in token and 'ﬁ' in text[offset:offset+20]:
-                    search_token = token.replace('fi', 'ﬁ')
-                elif 'fl' in token and 'ﬂ' in text[offset:offset+20]:
-                    search_token = token.replace('fl', 'ﬂ')
-                elif 'ff' in token and 'ﬀ' in text[offset:offset+20]:
-                    search_token = token.replace('ff', 'ﬀ')
-                else:
-                    search_token = token
+                span = len(token)
 
-                print(f"2 ---> {offset}")
-                print(f"3 ---> [{token}]")
-                print(f"4 ---> [{search_token}]")
+                # 处理 奇怪的符号
+                for strange in self._stranges:
+                    if strange[0] in (text[offset:].lstrip())[:span]:
+                        if strange[1] in token:
+                            search_token = token.replace(strange[1], strange[0])
+                        elif token[:-len(strange[1])+1]+strange[0] in (text[offset:].lstrip())[:span]:
+                            search_token = token[:-len(strange[1])+1]
+                        elif strange[0]+token[1:] == text[offset:offset+len(token)]:
+                            search_token = strange[0] + token[1:]
+                        elif token == strange[1][-len(strange[1])+1] + (text[offset:].lstrip())[len(strange[1])-1:len(token)]:
+                            search_token = strange[0] + token[len(strange[1])-1:]
+                        break
 
-                start = text[offset:].index(search_token) + offset
+                if search_token in text[offset:]:
+                    start = text[offset:].index(search_token) + offset
 
-                if not skip_offset:
                     end = start + len(search_token)
-                token_mapping.append(char_mapping[start:end])
-                offset = end
+                    token_mapping.append(char_mapping[start:end])
+                    offset = end
+
+                else:
+                    print(f"2 ---> {offset}")
+                    print(f"3 ---> [{token}]")
+                    print(f"4 ---> [{search_token}]")
+                    print(f"5 ---> [{text[offset:offset+20]}]")
+
+                    token_mapping.append([])
 
         return token_mapping
 
@@ -379,8 +381,8 @@ if __name__ == '__main__':
     evaluator = Evaluator()
     train_generator = data_generator(train_data, batch_size)
 
-    while True:
-        next(train_generator.forfit())
+    #for _ in tqdm(range(len(train_generator))):
+    #    next(train_generator.forfit())
 
     #model.load_weights('ckpt/pii_gp_best_f1_0.92476_noblank.h5')
 
