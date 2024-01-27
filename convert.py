@@ -111,7 +111,10 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
             token = l['tokens'][n].replace('…', '.').replace('´', "'").replace('²', '2')\
                 .replace('΅', "'").replace('¨', "'").replace(';', ';').replace('．', '.')\
                 .replace('³', '3').replace('‑', '-').replace('¹', '1').replace('½', '1')\
-                .replace('¾', '1').replace('¼', '1').replace('\xad', '-')
+                .replace('¾', '1').replace('¼', '1').replace('\xad', '-')\
+                .replace('ﬄ', 'ffl').replace('ﬃ', 'ffi').replace('ﬂ', 'fl')\
+                .replace('ﬁ', 'fi').replace('ﬀ', 'ff').replace('™', 'TM').replace('№', 'No')
+
             if l['trailing_whitespace'][n]:
                 token += ' ' 
 

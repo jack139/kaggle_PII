@@ -22,12 +22,12 @@ from tqdm import tqdm
 
 maxlen = 512
 epochs = 30
-batch_size = 4 # 16 for base, 4 for xxlarge
+batch_size = 16 # 16 for base, 4 for xxlarge
 learning_rate = 2e-5
 categories = set()
 
 # bert配置
-'''
+
 config_path = '../nlp_model/albert_base_v2/albert_config.json'
 checkpoint_path = '../nlp_model/albert_base_v2/model.ckpt-best'
 #dict_path = '../nlp_model/albert_base_v2/30k-clean.vocab'
@@ -36,7 +36,7 @@ spm_path = '../nlp_model/albert_base_v2/30k-clean.model'
 config_path = '../nlp_model/albert_xxlarge_v2/albert_config.json'
 checkpoint_path = '../nlp_model/albert_xxlarge_v2/model.ckpt-best'
 spm_path = '../nlp_model/albert_xxlarge_v2/30k-clean.model'
-
+'''
 
 def load_data(filename):
     """加载数据
@@ -68,16 +68,6 @@ print("labels: ", categories)
 class MySpTokenizer(SpTokenizer):
     def __init__(self, sp_model_path, **kwargs):
         super(MySpTokenizer, self).__init__(sp_model_path, **kwargs)
-
-        self._stranges = [
-            ('ﬄ', 'ffl'),
-            ('ﬃ', 'ffi'),
-            ('ﬂ', 'fl'),
-            ('ﬁ', 'fi'),
-            ('ﬀ', 'ff'),
-            ('™', 'TM'),
-            ('№', 'No'),
-        ]
 
     @staticmethod
     def _is_control(ch):
@@ -133,32 +123,13 @@ class MySpTokenizer(SpTokenizer):
 
                 span = len(token)
 
-                # 处理 奇怪的符号
-                for strange in self._stranges:
-                    if strange[0] in (text[offset:].lstrip())[:span]:
-                        if strange[1] in token:
-                            search_token = token.replace(strange[1], strange[0])
-                        elif token[:-len(strange[1])+1]+strange[0] in (text[offset:].lstrip())[:span]:
-                            search_token = token[:-len(strange[1])+1]
-                        elif strange[0]+token[1:] == text[offset:offset+len(token)]:
-                            search_token = strange[0] + token[1:]
-                        elif token == strange[1][-len(strange[1])+1] + (text[offset:].lstrip())[len(strange[1])-1:len(token)]:
-                            search_token = strange[0] + token[len(strange[1])-1:]
-                        break
-
                 if search_token in text[offset:]:
                     start = text[offset:].index(search_token) + offset
 
                     end = start + len(search_token)
                     token_mapping.append(char_mapping[start:end])
                     offset = end
-
                 else:
-                    print(f"2 ---> {offset}")
-                    print(f"3 ---> [{token}]")
-                    print(f"4 ---> [{search_token}]")
-                    print(f"5 ---> [{text[offset:offset+20]}]")
-
                     token_mapping.append([])
 
         return token_mapping
