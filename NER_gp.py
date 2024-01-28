@@ -6,6 +6,7 @@ os.environ["TF_KERAS"] = "1" # use tf 2.7 keras
 
 import json
 import numpy as np
+import math
 from bert4keras.backend import keras, K
 from bert4keras.backend import multilabel_categorical_crossentropy
 #from bert4keras.layers import GlobalPointer
@@ -16,24 +17,25 @@ from bert4keras.optimizers import Adam, extend_with_exponential_moving_average
 from bert4keras.snippets import sequence_padding, DataGenerator
 from bert4keras.snippets import open, to_array
 from keras.models import Model
+from keras.callbacks import LearningRateScheduler
 from tqdm import tqdm
 
 maxlen = 512
 epochs = 30
-batch_size = 16 # 16 for base / 4 for large
+batch_size = 4 # 16 for base / 4 for large
 learning_rate = 2e-5
 categories = set()
 
 # bert配置
+'''
 config_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/bert_config.json'
 checkpoint_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/bert_model.ckpt'
 dict_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/vocab.txt'
-
 '''
 config_path = '../nlp_model/bert_wwm_uncased_L-24_H-1024_A-16/bert_config.json'
 checkpoint_path = '../nlp_model/bert_wwm_uncased_L-24_H-1024_A-16/bert_model.ckpt'
 dict_path = '../nlp_model/bert_wwm_uncased_L-24_H-1024_A-16/vocab.txt'
-'''
+
 
 def load_data(filename):
     """加载数据
@@ -181,7 +183,6 @@ class Evaluator(keras.callbacks.Callback):
             (f1, precision, recall, self.best_val_f1)
         )
 
-
 def predict_to_file(in_file, out_file):
     """预测到文件
     """
@@ -272,18 +273,27 @@ def evl_to_file(in_file, out_file):
     )
 
 
+def lr_step_decay(epoch):
+    drop = 0.8
+    epochs_drop = 1.0
+    lrate = learning_rate * math.pow(drop, math.floor((1+epoch)/epochs_drop))
+    return lrate
+
+
 if __name__ == '__main__':
 
     evaluator = Evaluator()
+    lrate = LearningRateScheduler(lr_step_decay)
+
     train_generator = data_generator(train_data, batch_size)
 
-    #model.load_weights('ckpt/pii_gp_best_f1_0.92476_noblank.h5')
+    #model.load_weights('ckpt/pii_gp_best_f1_0.92609.h5')
 
     model.fit(
         train_generator.forfit(),
         steps_per_epoch=len(train_generator),
         epochs=epochs,
-        callbacks=[evaluator]
+        callbacks=[evaluator, lrate]
     )
 
 else:
