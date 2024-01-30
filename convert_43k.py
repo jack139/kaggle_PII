@@ -165,4 +165,4 @@ def assemble(infile, outfile_path, max_len=500, include_blank=False):
     )
 
 if __name__ == '__main__':
-    assemble(file_43k, 'data')
+    assemble(file_43k, 'data', max_len=250)

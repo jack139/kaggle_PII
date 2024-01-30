@@ -1,8 +1,19 @@
+'''
+import os
+os.environ["TF_KERAS"] = "1" # use tf 2.7 keras
+from bert4keras.tokenizers import Tokenizer
+
+dict_path = '../nlp_model/bert_wwm_uncased_L-24_H-1024_A-16/vocab.txt'
+tokenizer = Tokenizer(dict_path, do_lower_case=True)
+'''
+
 import json
 
 train_file = 'data/pii-detection-removal-from-educational-data/train.json'
 test_file = 'data/pii-detection-removal-from-educational-data/test.json'
 file_43k = 'data/external/english_pii_43k.jsonl'
+
+
 
 
 def load_data(filename, text_name='full_text'):
@@ -20,11 +31,21 @@ def load_data(filename, text_name='full_text'):
             l = json.loads(l)
 
             total += 1
-            if len(l[text_name])>500:
+
+            if len(l[text_name])>250:
                 print(len(l[text_name]), l[text_name][:10])
                 max_cnt += 1
             if len(l[text_name])>max_len:
                 max_len = len(l[text_name])
+
+            '''
+            tokens = tokenizer.tokenize(l[text_name])
+            if len(tokens)>500:
+                print(len(tokens), l[text_name][:10])
+                max_cnt += 1
+            if len(tokens)>max_len:
+                max_len = len(tokens)
+            '''
 
     return max_len, max_cnt, total
 
@@ -98,3 +119,5 @@ if __name__ == '__main__':
     #assemble(test_file)
 
     load_data(file_43k, "tokenised_text")
+    #load_data(file_43k, "unmasked_text")
+

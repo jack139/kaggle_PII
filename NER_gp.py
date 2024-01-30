@@ -20,9 +20,11 @@ from keras.models import Model
 from keras.callbacks import LearningRateScheduler
 from tqdm import tqdm
 
-maxlen = 512
+#maxlen = 512
+#batch_size = 4 # 16 for base / 4 for large
+maxlen = 256
+batch_size = 16 # for large
 epochs = 30
-batch_size = 4 # 16 for base / 4 for large
 learning_rate = 2e-5
 categories = set()
 
