@@ -9,6 +9,7 @@ train_file = 'data/pii-detection-removal-from-educational-data/train.json'
 test_file = 'data/pii-detection-removal-from-educational-data/test.json'
 
 train_43k = 'data/dataset_43k.json'
+train_43k_csv = 'data/dataset_43k_csv.json'
 
 split_ratio = 0.8
 
@@ -197,7 +198,9 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
 
         # 增加外部数据
         data_43k = json.load(open(train_43k))
-        data_43k += D[:split_n]
+        data_43k_csv = json.load(open(train_43k_csv))
+        data_43k += data_43k_csv
+        #data_43k += D[:split_n]
         random.shuffle(data_43k)
 
         json.dump(
@@ -221,7 +224,7 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
             ensure_ascii=False
         )
 
-        print(f"train set: {len(data_43k)}\tdev set: {len(D)-split_n}")
+        print(f"43k train set: {len(data_43k)}\ttrain set: {split_n}\tdev set: {len(D)-split_n}")
 
     else:
         json.dump(

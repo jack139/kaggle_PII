@@ -79,7 +79,7 @@ def assemble(infile, outfile_path, max_len=500, include_blank=False):
 
             #print(f"---> {l['document']}")
 
-            l['unmasked_text'] = l['unmasked_text'].replace('₨', '$').replace('´', "'").replace('﷼', '$').replace('…', '.')
+            #l['unmasked_text'] = l['unmasked_text'].replace('₨', '$').replace('´', "'").replace('﷼', '$').replace('…', '.')
 
             total += 1
 

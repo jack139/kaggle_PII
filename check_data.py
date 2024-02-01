@@ -8,10 +8,13 @@ tokenizer = Tokenizer(dict_path, do_lower_case=True)
 '''
 
 import json
+import pandas as pd
+from tqdm import tqdm
 
 train_file = 'data/pii-detection-removal-from-educational-data/train.json'
 test_file = 'data/pii-detection-removal-from-educational-data/test.json'
 file_43k = 'data/external/english_pii_43k.jsonl'
+file_43k_csv = 'data/external/PII43k.csv'
 
 
 
@@ -142,6 +145,39 @@ def assemble(filename, max_len=500):
     print(f"total= {total}\ttext_break= {text_break}\ttmp_break= {tmp_break}")
 
 
+def load_data_csv(filename, text_name='Tokenised Filled Template'):
+    """加载数据
+    单条格式：(文本, 标签id)
+    """
+    max_len = 0    
+    max_cnt = 0
+    total = 0
+
+    labels = set()
+
+    pd_data = pd.read_csv(filename)
+
+    for index, l in tqdm(pd_data.iterrows()):
+
+        total += 1
+
+        #print(l[text_name])
+        tokenized = eval(l[text_name])
+        if len(tokenized)>250:
+            print(len(tokenized), tokenized[:10])
+            max_cnt += 1
+        if len(tokenized)>max_len:
+            max_len = len(tokenized)
+
+        tokens = eval(l['Tokens'])
+        for x in tokens:
+            if x=='O':
+                continue
+            labels.add(x.split('-')[1])
+
+    return max_len, max_cnt, total, list(labels)
+
+
 if __name__ == '__main__':
 
     #assemble(train_file)
@@ -151,6 +187,8 @@ if __name__ == '__main__':
     #load_data(file_43k, "unmasked_text")
 
     #check_data('data/dataset_43k.json')
-    check_data('data/train.json')
+    #check_data('data/train.json')
     #check_data('data/dev.json')
     #check_data('data/train_43k.json')
+
+    print(load_data_csv(file_43k_csv))
