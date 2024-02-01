@@ -113,8 +113,8 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
         while n<len(l['tokens']):
             token = l['tokens'][n].replace('…', '.').replace('´', "'").replace('²', '2')\
                 .replace('΅', "'").replace('¨', "'").replace(';', ';').replace('．', '.')\
-                .replace('³', '3').replace('‑', '-').replace('¹', '1').replace('½', '1')\
-                .replace('¾', '1').replace('¼', '1').replace('\xad', '-')\
+                .replace('³', '3').replace('‑', '-').replace('¹', '1').replace('½', '1/2')\
+                .replace('¾', '3/4').replace('¼', '1/4').replace('\xad', '-')\
                 .replace('ﬄ', 'ffl').replace('ﬃ', 'ffi').replace('ﬂ', 'fl')\
                 .replace('ﬁ', 'fi').replace('ﬀ', 'ff').replace('™', 'TM').replace('№', 'No')
 
@@ -200,7 +200,7 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
         data_43k = json.load(open(train_43k))
         data_43k_csv = json.load(open(train_43k_csv))
         data_43k += data_43k_csv
-        #data_43k += D[:split_n]
+        data_43k += D[:split_n]
         random.shuffle(data_43k)
 
         json.dump(

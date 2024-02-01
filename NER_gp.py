@@ -181,7 +181,7 @@ class Evaluator(keras.callbacks.Callback):
         # 保存最优
         if f1 >= self.best_val_f1:
             self.best_val_f1 = f1
-            model.save_weights('ckpt/pii_gp_best_f1_%.5f.h5'%f1)
+            model.save_weights(f'ckpt/pii_gp_best_b{batch_size}_l{maxlen}_e{epoch:02d}_f1_{f1:.5f}.h5')
         print(
             'valid:  f1: %.5f, precision: %.5f, recall: %.5f, best f1: %.5f\n' %
             (f1, precision, recall, self.best_val_f1)
