@@ -4,6 +4,7 @@ import json
 from tqdm import tqdm
 from copy import deepcopy
 
+
 train_file = 'data/pii-detection-removal-from-educational-data/train.json'
 test_file = 'data/pii-detection-removal-from-educational-data/test.json'
 
@@ -11,6 +12,7 @@ train_43k = 'data/dataset_43k.json'
 
 split_ratio = 0.8
 
+random.seed(816)
 
 '''
   {

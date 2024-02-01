@@ -20,6 +20,8 @@ from keras.models import Model
 from keras.callbacks import LearningRateScheduler
 from tqdm import tqdm
 
+keras.utils.set_random_seed(816)
+
 #maxlen = 512
 #batch_size = 4 # 16 for base / 4 for large
 maxlen = 256
@@ -192,6 +194,7 @@ def predict_to_file(in_file, out_file):
 
     document = ""
     last_pos = 0
+    last_type = None
     D = []
 
     for d in tqdm(data, ncols=100):
@@ -199,9 +202,11 @@ def predict_to_file(in_file, out_file):
         if document != d['document']:
             document = d['document']
             last_pos = 0
+            last_type = None
 
         # 初始化 BIO 标记
         label = ['O']*len(d['tokens'])
+        this_last_type = None
 
         # 识别
         entities = NER.recognize(d['text'])
@@ -217,11 +222,17 @@ def predict_to_file(in_file, out_file):
             for n, x in enumerate(d['tokens']):
                 if pos >= e[0] and pos <= e[1]+1:
                     if last==0:
-                        label[n] = 'B-'+e[2]
+                        if pos==0 and e[2]==last_type:
+                            label[n] = 'I-'+e[2] # 第一个与上一条最后一个type一样，type继续
+                        else:
+                            label[n] = 'B-'+e[2]
                         last += 1
                     else:
                         label[n] = 'I-'+e[2]
                     D.append((document, last_pos+n, label[n]))
+
+                    if n==len(d['tokens'])-1:
+                        this_last_type = e[2] # 记录末尾的 type
                 else:
                     last = 0
 
@@ -233,6 +244,7 @@ def predict_to_file(in_file, out_file):
         d['labels'] = label
 
         last_pos += len(d['tokens'])
+        last_type = this_last_type
 
     # 保存json格式
     json.dump(
@@ -299,6 +311,6 @@ if __name__ == '__main__':
     )
 
 else:
-    model.load_weights('ckpt/pii_gp_best_f1_0.92476.h5')
-    #predict_to_file('data/test.json', 'data/submission.csv')
-    evl_to_file('data/dev.json', 'data/output.json')
+    model.load_weights('ckpt/pii_gp_best_f1_0.94595_noblank.h5')
+    predict_to_file('data/test2.json', 'data/submission.csv')
+    #evl_to_file('data/dev.json', 'data/output2.json')

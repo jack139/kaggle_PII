@@ -15,6 +15,35 @@ file_43k = 'data/external/english_pii_43k.jsonl'
 
 
 
+def check_data(filename):
+    n1 = n2 = 0
+    doc = {}
+
+    data = json.load(open(filename))
+    for l in data:
+        if len(l['entities'])>0:
+            if l['entities'][0]['start_idx']==0:
+                n1 += 1
+                print(1, l.get('document'), l['text'][:30])
+                if l.get('document'):
+                    if l.get('document') in doc.keys():
+                        doc[l.get('document')] += 1
+                    else:
+                        doc[l.get('document')] = 1
+            if l['entities'][-1]['end_idx']==len(l['text'])-1:
+                n2 += 1
+                print(2, l.get('document'), l['text'][:30])
+                if l.get('document'):
+                    if l.get('document') in doc.keys():
+                        doc[l.get('document')] += 1
+                    else:
+                        doc[l.get('document')] = 1
+
+    print(f"n1={n1} n2={n2} ")
+    for x in doc.keys():
+        if doc[x]>1:
+            print(x, doc[x])
+    
 
 def load_data(filename, text_name='full_text'):
     """加载数据
@@ -118,6 +147,10 @@ if __name__ == '__main__':
     #assemble(train_file)
     #assemble(test_file)
 
-    load_data(file_43k, "tokenised_text")
+    #load_data(file_43k, "tokenised_text")
     #load_data(file_43k, "unmasked_text")
 
+    #check_data('data/dataset_43k.json')
+    check_data('data/train.json')
+    #check_data('data/dev.json')
+    #check_data('data/train_43k.json')
