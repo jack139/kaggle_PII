@@ -27,7 +27,7 @@ keras.utils.set_random_seed(816)
 maxlen = 256
 batch_size = 8 # for large
 epochs = 30
-learning_rate = 2e-5
+learning_rate = 2e-5 #* (0.8 ** 3)
 categories = set()
 
 # bert配置
@@ -58,8 +58,8 @@ def load_data(filename):
 
 
 # 标注数据
-#train_data = load_data('data/train.json')
-train_data = load_data('data/train_43k.json')
+train_data = load_data('data/train.json')
+#train_data = load_data('data/train_43k.json')
 valid_data = load_data('data/dev.json')
 categories = list(sorted(categories))
 
@@ -301,7 +301,7 @@ if __name__ == '__main__':
 
     train_generator = data_generator(train_data, batch_size)
 
-    #model.load_weights('ckpt/pii_gp_best_b8_l256_e05_f1_0.91615.h5')
+    #model.load_weights('ckpt/pii_gp_best_b8_l256_e08_f1_0.94249.h5')
 
     model.fit(
         train_generator.forfit(),
