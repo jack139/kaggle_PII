@@ -15,6 +15,7 @@ train_file = 'data/pii-detection-removal-from-educational-data/train.json'
 test_file = 'data/pii-detection-removal-from-educational-data/test.json'
 file_43k = 'data/external/english_pii_43k.jsonl'
 file_43k_csv = 'data/external/PII43k.csv'
+file_10k = 'data/external/english_balanced_10k.jsonl'
 
 
 
@@ -56,10 +57,12 @@ def load_data(filename, text_name='full_text'):
     max_cnt = 0
     total = 0
 
+    labels = set()
+
     #data = json.load(open(filename))
 
     with open(filename) as f:
-        for l in f:
+        for l in tqdm(f):
             l = json.loads(l)
 
             total += 1
@@ -79,7 +82,13 @@ def load_data(filename, text_name='full_text'):
                 max_len = len(tokens)
             '''
 
-    return max_len, max_cnt, total
+            for x in l['token_entity_labels']:
+                if x=='O':
+                    continue
+                labels.add(x.split('-')[1])
+
+
+    return max_len, max_cnt, total, list(labels)
 
 
 def assemble(filename, max_len=500):
@@ -191,4 +200,6 @@ if __name__ == '__main__':
     #check_data('data/dev.json')
     #check_data('data/train_43k.json')
 
-    print(load_data_csv(file_43k_csv))
+    #print(load_data_csv(file_43k_csv))
+
+    print(load_data(file_10k, "tokenised_unmasked_text"))

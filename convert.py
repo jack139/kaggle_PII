@@ -10,6 +10,7 @@ test_file = 'data/pii-detection-removal-from-educational-data/test.json'
 
 train_43k = 'data/dataset_43k.json'
 train_43k_csv = 'data/dataset_43k_csv.json'
+train_10k = 'data/dataset_10k.json'
 
 split_ratio = 0.8
 
@@ -111,12 +112,12 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
         tmp_text = []
         n = n_text = n_tmp = 0
         while n<len(l['tokens']):
-            token = l['tokens'][n].replace('…', '.').replace('´', "'").replace('²', '2')\
-                .replace('΅', "'").replace('¨', "'").replace(';', ';').replace('．', '.')\
-                .replace('³', '3').replace('‑', '-').replace('¹', '1').replace('½', '1/2')\
-                .replace('¾', '3/4').replace('¼', '1/4').replace('\xad', '-')\
-                .replace('ﬄ', 'ffl').replace('ﬃ', 'ffi').replace('ﬂ', 'fl')\
-                .replace('ﬁ', 'fi').replace('ﬀ', 'ff').replace('™', 'TM').replace('№', 'No')
+            token = l['tokens'][n].replace('ﬄ', 'ffl').replace('ﬃ', 'ffi').replace('ﬂ', 'fl').replace('ﬁ', 'fi').replace('ﬀ', 'ff')
+            #    .replace('…', '.').replace('´', "'").replace('²', '2')\
+            #    .replace('΅', "'").replace('¨', "'").replace(';', ';').replace('．', '.')\
+            #    .replace('³', '3').replace('‑', '-').replace('¹', '1').replace('½', '1/2')\
+            #    .replace('¾', '3/4').replace('¼', '1/4').replace('\xad', '-')\
+            #    .replace('™', 'TM').replace('№', 'No')
 
             if l['trailing_whitespace'][n]:
                 token += ' ' 
@@ -199,7 +200,10 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
         # 增加外部数据
         data_43k = json.load(open(train_43k))
         data_43k_csv = json.load(open(train_43k_csv))
+        data_10k = json.load(open(train_10k))        
+
         data_43k += data_43k_csv
+        data_43k += data_10k
         data_43k += D[:split_n]
         random.shuffle(data_43k)
 

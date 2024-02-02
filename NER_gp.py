@@ -301,7 +301,7 @@ if __name__ == '__main__':
 
     train_generator = data_generator(train_data, batch_size)
 
-    #model.load_weights('ckpt/pii_gp_best_f1_0.92609.h5')
+    #model.load_weights('ckpt/pii_gp_best_b8_l256_e05_f1_0.91615.h5')
 
     model.fit(
         train_generator.forfit(),
