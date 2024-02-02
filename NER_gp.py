@@ -224,6 +224,8 @@ def predict_to_file(in_file, out_file):
                     if last==0:
                         if pos==0 and e[2]==last_type:
                             label[n] = 'I-'+e[2] # 第一个与上一条最后一个type一样，type继续
+                        elif n>0 and (label[n-1]=='B-'+e[2] or label[n-1]=='I-'+e[2]):
+                            label[n] = 'I-'+e[2]
                         else:
                             label[n] = 'B-'+e[2]
                         last += 1
@@ -267,6 +269,7 @@ def evl_to_file(in_file, out_file):
 
     for d in tqdm(data, ncols=100):
         d['entities_2'] = []
+        d['tokens'] = []
 
         # 识别
         entities = NER.recognize(d['text'])
@@ -311,6 +314,6 @@ if __name__ == '__main__':
     )
 
 else:
-    model.load_weights('ckpt/pii_gp_best_f1_0.94595_noblank.h5')
+    model.load_weights('ckpt/pii_gp_best_b8_l256_e06_f1_0.94249.h5')
     predict_to_file('data/test2.json', 'data/submission.csv')
     #evl_to_file('data/dev.json', 'data/output2.json')
