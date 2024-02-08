@@ -234,6 +234,7 @@ def predict_to_file(in_file, out_file):
 
         # 识别
         entities = NER.recognize(d['text'])
+        entities = sorted(entities, key=lambda x: x[0], reverse=False) # sort by start_idx
         for e in entities:
             filt_this = post_filter(e[2], d['text'][e[0]:e[1]+1])
             d['entities'].append({
@@ -301,6 +302,7 @@ def evl_to_file(in_file, out_file):
 
         # 识别
         entities = NER.recognize(d['text'])
+        entities = sorted(entities, key=lambda x: x[0], reverse=False) # sort by start_idx
         for e in entities:
             filt_this = post_filter(e[2], d['text'][e[0]:e[1]+1])
             d['entities_2'].append({
