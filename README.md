@@ -9,6 +9,10 @@ Develop automated techniques to detect and remove PII from educational data.
 ## 转换数据
 
 ```bash
+python3.9 convert_43k.py
+python3.9 convert_43k_csv.py
+python3.9 convert_10k.py
+python3.9 convert_names.py
 python3.9 convert.py
 ```
 
