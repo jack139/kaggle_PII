@@ -132,7 +132,10 @@ def assemble(infile, outfile_path, max_len=500, include_blank=False):
                 last_label = e['type']
                 last_end = e['end_idx']
             else:
-                if last_end == e['start_idx'] - 2:
+                if last_end == e['start_idx'] - 1:
+                    last_entity['end_idx'] = last_end = e['end_idx']
+                    last_entity['entity'] += e['entity']
+                elif last_end == e['start_idx'] - 2:
                     last_entity['end_idx'] = last_end = e['end_idx']
                     last_entity['entity'] += (' ' + e['entity'])
                 elif last_label=='STREET_ADDRESS' and d['text'][last_end+1]==',' and last_end == e['start_idx'] - 3:
