@@ -187,6 +187,28 @@ class Evaluator(keras.callbacks.Callback):
             (f1, precision, recall, self.best_val_f1)
         )
 
+###### generate result & evaluating
+
+name_dataset = json.load(open("data/names.json"))
+
+def post_filter(label, text):
+    if label=='NAME_STUDENT':
+        if text in name_dataset:
+            return True
+    elif label=='URL_PERSONAL':
+        if text.endswith("/"):
+            return True
+        elif text.endswith(".org"):
+            return True
+        elif text.endswith(".net"):
+            return True
+        elif text.endswith(".biz"):
+            return True
+    elif label=='STREET_ADDRESS':
+        if len(text.split())<3:
+            return True
+    return False
+
 def predict_to_file(in_file, out_file):
     """预测到文件
     """
@@ -211,37 +233,41 @@ def predict_to_file(in_file, out_file):
         # 识别
         entities = NER.recognize(d['text'])
         for e in entities:
+            filt_this = post_filter(e[2], d['text'][e[0]:e[1]+1])
             d['entities'].append({
                 'start_idx': e[0],
                 'end_idx': e[1],
-                'type': e[2]
+                'type': e[2],
+                'entity': d['text'][e[0]:e[1]+1],
+                'filt_this': filt_this
             })
 
-            # 生成 BIO标记, 依据 原始 tokens
-            pos = last = 0
-            for n, x in enumerate(d['tokens']):
-                if pos >= e[0] and pos <= e[1]+1:
-                    if last==0:
-                        if pos==0 and e[2]==last_type:
-                            label[n] = 'I-'+e[2] # 第一个与上一条最后一个type一样，type继续
-                        elif n>0 and (label[n-1]=='B-'+e[2] or label[n-1]=='I-'+e[2]):
-                            label[n] = 'I-'+e[2]
+            if not filt_this:
+                # 生成 BIO标记, 依据 原始 tokens
+                pos = last = 0
+                for n, x in enumerate(d['tokens']):
+                    if pos >= e[0] and pos <= e[1]+1:
+                        if last==0:
+                            if pos==0 and e[2]==last_type:
+                                label[n] = 'I-'+e[2] # 第一个与上一条最后一个type一样，type继续
+                            elif n>0 and (label[n-1]=='B-'+e[2] or label[n-1]=='I-'+e[2]):
+                                label[n] = 'I-'+e[2]
+                            else:
+                                label[n] = 'B-'+e[2]
+                            last += 1
                         else:
-                            label[n] = 'B-'+e[2]
-                        last += 1
+                            label[n] = 'I-'+e[2]
+                        D.append((document, last_pos+n, label[n]))
+
+                        if n==len(d['tokens'])-1:
+                            this_last_type = e[2] # 记录末尾的 type
                     else:
-                        label[n] = 'I-'+e[2]
-                    D.append((document, last_pos+n, label[n]))
+                        last = 0
 
-                    if n==len(d['tokens'])-1:
-                        this_last_type = e[2] # 记录末尾的 type
-                else:
-                    last = 0
+                    pos += len(x)
 
-                pos += len(x)
-
-                if pos > e[1]:
-                    break
+                    if pos > e[1]:
+                        break
 
         d['labels'] = label
 
@@ -274,11 +300,13 @@ def evl_to_file(in_file, out_file):
         # 识别
         entities = NER.recognize(d['text'])
         for e in entities:
+            filt_this = post_filter(e[2], d['text'][e[0]:e[1]+1])
             d['entities_2'].append({
                 'start_idx': e[0],
                 'end_idx': e[1],
                 'type': e[2],
-                'entity': d['text'][e[0]:e[1]+1]
+                'entity': d['text'][e[0]:e[1]+1],
+                'filt_this': filt_this
             })
 
     # 保存json格式
@@ -315,5 +343,5 @@ if __name__ == '__main__':
 
 else:
     model.load_weights('ckpt/pii_gp_best_b8_l256_e06_f1_0.94249.h5')
-    predict_to_file('data/test2.json', 'data/submission.csv')
-    #evl_to_file('data/dev.json', 'data/output2.json')
+    #predict_to_file('data/test2.json', 'data/submission.csv')
+    evl_to_file('data/test/diff_output2.json', 'data/output2.json')
