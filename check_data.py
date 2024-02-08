@@ -43,6 +43,10 @@ def check_data(filename):
                     else:
                         doc[l.get('document')] = 1
 
+            for x in l['entities']:
+                if "\n\n" in l['text'][x['start_idx']:x['end_idx']+1]:
+                    print(3, l['text'][:30])
+
     print(f"n1={n1} n2={n2} ")
     for x in doc.keys():
         if doc[x]>1:
@@ -196,10 +200,10 @@ if __name__ == '__main__':
     #load_data(file_43k, "unmasked_text")
 
     #check_data('data/dataset_43k.json')
-    #check_data('data/train.json')
+    check_data('data/train.json')
     #check_data('data/dev.json')
     #check_data('data/train_43k.json')
 
     #print(load_data_csv(file_43k_csv))
 
-    print(load_data(file_10k, "tokenised_unmasked_text"))
+    #print(load_data(file_10k, "tokenised_unmasked_text"))
