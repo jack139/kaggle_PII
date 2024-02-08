@@ -148,6 +148,8 @@ def assemble(infile, outfile_path, max_len=500, include_blank=False):
         for x in new_e:
             if x['type']=='STREET_ADDRESS' and x['entity'].isdigit():
                 continue
+            elif x['type']=='STREET_ADDRESS' and len(x['entity'].split())<4:
+                continue
             else:
                 d['entities'].append(x)
 

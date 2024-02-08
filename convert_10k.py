@@ -65,7 +65,7 @@ labels 映射：
 labels_to = {
     'EMAIL' : ['EMAIL'],
     'ID_NUM' : ['PIN', 'ACCOUNTNUMBER', 'CREDITCARDNUMBER', 'MASKEDNUMBER'],
-    'NAME_STUDENT' : ['LASTNAME', 'MIDDLENAME', 'FIRSTNAME', 'FULLNAME', 'NAME'],
+    'NAME_STUDENT' : ['LASTNAME', 'MIDDLENAME', 'FIRSTNAME', 'FULLNAME'],
     'PHONE_NUM' : ['PHONE_NUMBER'],
     'STREET_ADDRESS' : ['SECONDARYADDRESS', 'STREET', 'BUILDINGNUMBER', 'CITY', 'STATE', 'ZIPCODE', 'COUNTY', 'STREETADDRESS'],
     'URL_PERSONAL' : ['URL'],
@@ -166,6 +166,8 @@ def assemble(infile, outfile_path, max_len=500, include_blank=False):
         d['entities'] = []
         for x in new_e:
             if x['type']=='STREET_ADDRESS' and x['entity'].isdigit():
+                continue
+            elif x['type']=='STREET_ADDRESS' and len(x['entity'].split())<4:
                 continue
             else:
                 d['entities'].append(x)

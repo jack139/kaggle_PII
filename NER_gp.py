@@ -204,6 +204,8 @@ def post_filter(label, text):
             return True
         elif text.endswith(".biz"):
             return True
+        elif text.endswith(".com"):
+            return True
     elif label=='STREET_ADDRESS':
         if len(text.split())<3:
             return True
