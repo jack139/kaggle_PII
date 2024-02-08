@@ -58,8 +58,8 @@ def load_data(filename):
 
 
 # 标注数据
-train_data = load_data('data/train.json')
-#train_data = load_data('data/train_43k.json')
+#train_data = load_data('data/train.json')
+train_data = load_data('data/train_43k.json')
 valid_data = load_data('data/dev.json')
 categories = list(sorted(categories))
 
@@ -150,10 +150,36 @@ class NamedEntityRecognizer(object):
             entities.append(
                 (mapping[start][0], mapping[end][-1], categories[l])
             )
+        entities = sorted(entities, key=lambda x: x[0], reverse=False) # sort by start_idx
         return entities
 
 
 NER = NamedEntityRecognizer()
+
+name_dataset = json.load(open("data/names.json"))
+
+
+def post_filter(label, text):
+    """结果进行后处理
+    """
+    if label=='NAME_STUDENT':
+        if text.lower() in name_dataset:
+            return True
+    elif label=='URL_PERSONAL':
+        if text.endswith("/"):
+            return True
+        elif text.endswith(".org"):
+            return True
+        elif text.endswith(".net"):
+            return True
+        elif text.endswith(".biz"):
+            return True
+        elif text.endswith(".com"):
+            return True
+    elif label=='STREET_ADDRESS':
+        if len(text.split())<4:
+            return True
+    return False
 
 
 def evaluate(data):
@@ -161,7 +187,9 @@ def evaluate(data):
     """
     X, Y, Z = 1e-10, 1e-10, 1e-10
     for d in tqdm(data, ncols=100):
-        R = set(NER.recognize(d[0]))
+        R = NER.recognize(d[0])
+        R = [ e for e in R if not post_filter(e[2], d[0][e[0]:e[1]+1]) ]
+        R = set(R)
         T = set([tuple(i) for i in d[1:]])
         X += len(R & T)
         Y += len(R)
@@ -187,29 +215,8 @@ class Evaluator(keras.callbacks.Callback):
             (f1, precision, recall, self.best_val_f1)
         )
 
+
 ###### generate result & evaluating
-
-name_dataset = json.load(open("data/names.json"))
-
-def post_filter(label, text):
-    if label=='NAME_STUDENT':
-        if text in name_dataset:
-            return True
-    elif label=='URL_PERSONAL':
-        if text.endswith("/"):
-            return True
-        elif text.endswith(".org"):
-            return True
-        elif text.endswith(".net"):
-            return True
-        elif text.endswith(".biz"):
-            return True
-        elif text.endswith(".com"):
-            return True
-    elif label=='STREET_ADDRESS':
-        if len(text.split())<3:
-            return True
-    return False
 
 def predict_to_file(in_file, out_file):
     """预测到文件
@@ -234,7 +241,6 @@ def predict_to_file(in_file, out_file):
 
         # 识别
         entities = NER.recognize(d['text'])
-        entities = sorted(entities, key=lambda x: x[0], reverse=False) # sort by start_idx
         for e in entities:
             filt_this = post_filter(e[2], d['text'][e[0]:e[1]+1])
             d['entities'].append({
@@ -292,7 +298,7 @@ def predict_to_file(in_file, out_file):
 
 
 def evl_to_file(in_file, out_file):
-    """预测到文件
+    """评估到文件
     """
     data = json.load(open(in_file))
 
@@ -302,7 +308,6 @@ def evl_to_file(in_file, out_file):
 
         # 识别
         entities = NER.recognize(d['text'])
-        entities = sorted(entities, key=lambda x: x[0], reverse=False) # sort by start_idx
         for e in entities:
             filt_this = post_filter(e[2], d['text'][e[0]:e[1]+1])
             d['entities_2'].append({
@@ -323,6 +328,8 @@ def evl_to_file(in_file, out_file):
 
 
 def lr_step_decay(epoch):
+    """ lr 衰减函数
+    """
     drop = 0.8
     epochs_drop = 1.0
     lrate = learning_rate * math.pow(drop, math.floor((1+epoch)/epochs_drop))
@@ -336,7 +343,7 @@ if __name__ == '__main__':
 
     train_generator = data_generator(train_data, batch_size)
 
-    #model.load_weights('ckpt/pii_gp_best_b8_l256_e08_f1_0.94249.h5')
+    #model.load_weights('ckpt/pii_gp_best_b8_l256_e01_f1_0.92971.h5')
 
     model.fit(
         train_generator.forfit(),
@@ -346,6 +353,8 @@ if __name__ == '__main__':
     )
 
 else:
-    model.load_weights('ckpt/pii_gp_best_b8_l256_e06_f1_0.94249.h5')
+    model.load_weights('ckpt/pii_gp_best_b8_l256_e01_f1_0.92971.h5')
     #predict_to_file('data/test2.json', 'data/submission.csv')
-    evl_to_file('data/test/diff_output2.json', 'data/output2.json')
+
+    #evl_to_file('data/test/diff_output2.json', 'data/output2.json')
+    evl_to_file('data/dev.json', 'data/output2.json')
