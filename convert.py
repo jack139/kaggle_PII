@@ -202,14 +202,14 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
         data_43k_csv = json.load(open(train_43k_csv))
         data_10k = json.load(open(train_10k))        
 
-        data_43k += data_43k_csv
-        data_43k += data_10k
-        data_43k += D[:split_n]
-        random.shuffle(data_43k)
+        #data_more = data_43k + data_43k_csv + data_10k
+        data_more = data_43k + data_43k_csv
+        data_more += D[:split_n]
+        random.shuffle(data_more)
 
         json.dump(
-            data_43k,
-            open(os.path.join(outfile_path, "train_43k.json"), 'w', encoding='utf-8'),
+            data_more,
+            open(os.path.join(outfile_path, "train_more.json"), 'w', encoding='utf-8'),
             indent=4,
             ensure_ascii=False
         )
@@ -228,7 +228,7 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
             ensure_ascii=False
         )
 
-        print(f"43k train set: {len(data_43k)}\ttrain set: {split_n}\tdev set: {len(D)-split_n}")
+        print(f"train_more set: {len(data_more)}\ttrain set: {split_n}\tdev set: {len(D)-split_n}")
 
     else:
         json.dump(

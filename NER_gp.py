@@ -25,13 +25,13 @@ keras.utils.set_random_seed(816)
 #maxlen = 512
 #batch_size = 4 # 16 for base / 4 for large
 maxlen = 256
-batch_size = 8 # for large
+batch_size = 32 # 32 for base / 8 for large 
 epochs = 30
 learning_rate = 2e-5 #* (0.8 ** 3)
 categories = set()
 
 # bert配置
-'''
+
 config_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/bert_config.json'
 checkpoint_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/bert_model.ckpt'
 dict_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/vocab.txt'
@@ -39,7 +39,7 @@ dict_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/vocab.txt'
 config_path = '../nlp_model/bert_wwm_uncased_L-24_H-1024_A-16/bert_config.json'
 checkpoint_path = '../nlp_model/bert_wwm_uncased_L-24_H-1024_A-16/bert_model.ckpt'
 dict_path = '../nlp_model/bert_wwm_uncased_L-24_H-1024_A-16/vocab.txt'
-
+'''
 
 def load_data(filename):
     """加载数据
@@ -59,7 +59,7 @@ def load_data(filename):
 
 # 标注数据
 #train_data = load_data('data/train.json')
-train_data = load_data('data/train_43k.json')
+train_data = load_data('data/train_more.json')
 valid_data = load_data('data/dev.json')
 categories = list(sorted(categories))
 
