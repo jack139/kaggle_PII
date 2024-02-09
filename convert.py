@@ -202,8 +202,7 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
         data_43k_csv = json.load(open(train_43k_csv))
         data_10k = json.load(open(train_10k))        
 
-        #data_more = data_43k + data_43k_csv + data_10k
-        data_more = data_43k + data_43k_csv
+        data_more = data_43k + data_43k_csv + data_10k
         data_more += D[:split_n]
         random.shuffle(data_more)
 
@@ -241,5 +240,5 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
         print(f"test set: {len(D)}")
 
 if __name__ == '__main__':
-    assemble(train_file, 'data', max_len=250, include_blank=False)
-    assemble(test_file, 'data', max_len=250, is_train=False)
+    assemble(train_file, 'data', max_len=505, include_blank=False)
+    assemble(test_file, 'data', max_len=505, is_train=False)
