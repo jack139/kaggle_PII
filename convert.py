@@ -1,4 +1,8 @@
 import os
+os.environ["TF_KERAS"] = "1" # use tf 2.7 keras
+
+from bert4keras.tokenizers import Tokenizer
+
 import random
 import json
 from tqdm import tqdm
@@ -15,6 +19,9 @@ train_10k = 'data/dataset_10k.json'
 split_ratio = 0.8
 
 random.seed(816)
+
+dict_path = '../nlp_model/bert_wwm_uncased_L-24_H-1024_A-16/vocab.txt'
+tokenizer = Tokenizer(dict_path, do_lower_case=True)
 
 '''
   {
@@ -88,6 +95,11 @@ def __convert(indata, include_blank=False):
 
     # 加入数据集
     if include_blank or len(entities)>0:
+        # 检查 token 长度
+        tokens = tokenizer.tokenize(''.join(text))
+        if len(tokens)>512: 
+            print(f"wrong length of tokens, {len(tokens)}: {''.join(text)[:50]}")
+
         return {
             'text' : ''.join(text),
             'entities' : entities,
@@ -122,7 +134,9 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
             if l['trailing_whitespace'][n]:
                 token += ' ' 
 
-            if n_tmp + 1 > max_len:
+            token_len = len(tokenizer.tokenize(token))
+
+            if n_tmp + token_len > max_len:
                 text += deepcopy(tmp_text)
                 tmp_text = []
                 n_text += n_tmp
@@ -133,7 +147,7 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
                 #print(text)
                 #assert False, f"tmp_text is too long: {len(text)}, {len(tmp_text)}, {len(token)}"
 
-            if n_text + n_tmp + 1 > max_len:
+            if n_text + n_tmp + token_len > max_len:
                 assert n_text>0, f"too long: {n_text}, {n_tmp}, {max_len}"
                 #print(text)
                 #print('-'*20)
@@ -155,7 +169,8 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
                 tmp_text += [(token, l['labels'][n])] # token, label
             else:
                 tmp_text += [(token, 'O')] # token, blank-label
-            n_tmp += 1
+            #n_tmp += 1
+            n_tmp += token_len
 
             if token=='\n\n':
                 text += deepcopy(tmp_text)
@@ -240,5 +255,5 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
         print(f"test set: {len(D)}")
 
 if __name__ == '__main__':
-    assemble(train_file, 'data', max_len=505, include_blank=False)
-    assemble(test_file, 'data', max_len=505, is_train=False)
+    assemble(train_file, 'data', max_len=500, include_blank=False)
+    assemble(test_file, 'data', max_len=500, is_train=False)

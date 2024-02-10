@@ -23,15 +23,15 @@ from tqdm import tqdm
 keras.utils.set_random_seed(816)
 
 maxlen = 512
-batch_size = 4 # 16 for base / 4 for large
+batch_size = 16 # 16 for base / 4 for large
 #maxlen = 256
 #batch_size = 32 # 32 for base / 8 for large 
 epochs = 30
-learning_rate = 2e-5 * (0.8 ** 10)
+learning_rate = 2e-5 #* (0.8 ** 10)
 categories = set()
 
 # bert配置
-'''
+
 config_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/bert_config.json'
 checkpoint_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/bert_model.ckpt'
 dict_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/vocab.txt'
@@ -39,7 +39,7 @@ dict_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/vocab.txt'
 config_path = '../nlp_model/bert_wwm_uncased_L-24_H-1024_A-16/bert_config.json'
 checkpoint_path = '../nlp_model/bert_wwm_uncased_L-24_H-1024_A-16/bert_model.ckpt'
 dict_path = '../nlp_model/bert_wwm_uncased_L-24_H-1024_A-16/vocab.txt'
-
+'''
 
 def load_data(filename):
     """加载数据
@@ -58,8 +58,8 @@ def load_data(filename):
 
 
 # 标注数据
-train_data = load_data('data/train.json')
-#train_data = load_data('data/train_more.json')
+#train_data = load_data('data/train.json')
+train_data = load_data('data/train_more.json')
 valid_data = load_data('data/dev.json')
 categories = list(sorted(categories))
 
@@ -343,7 +343,7 @@ if __name__ == '__main__':
 
     train_generator = data_generator(train_data, batch_size)
 
-    model.load_weights('ckpt/pii_gp_best_b4_l512_e11_f1_0.93980.h5')
+    #model.load_weights('ckpt/pii_gp_best_b4_l512_e11_f1_0.93980.h5')
 
     model.fit(
         train_generator.forfit(),
@@ -353,8 +353,8 @@ if __name__ == '__main__':
     )
 
 else:
-    model.load_weights('ckpt/pii_gp_best_b4_l512_e09_f1_0.92763.h5')
-    #predict_to_file('data/test2.json', 'data/submission.csv')
+    model.load_weights('ckpt/pii_gp_best_b4_l512_e11_f1_0.93980.h5')
+    predict_to_file('data/test2.json', 'data/submission.csv')
 
     #evl_to_file('data/test/diff_output2.json', 'data/output2.json')
-    evl_to_file('data/dev.json', 'data/output2.json')
+    #evl_to_file('data/dev.json', 'data/output2.json')
