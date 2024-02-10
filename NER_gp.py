@@ -27,7 +27,7 @@ batch_size = 4 # 16 for base / 4 for large
 #maxlen = 256
 #batch_size = 32 # 32 for base / 8 for large 
 epochs = 30
-learning_rate = 2e-5 #* (0.8 ** 3)
+learning_rate = 2e-5 * (0.8 ** 10)
 categories = set()
 
 # bert配置
@@ -58,8 +58,8 @@ def load_data(filename):
 
 
 # 标注数据
-#train_data = load_data('data/train.json')
-train_data = load_data('data/train_more.json')
+train_data = load_data('data/train.json')
+#train_data = load_data('data/train_more.json')
 valid_data = load_data('data/dev.json')
 categories = list(sorted(categories))
 
@@ -343,7 +343,7 @@ if __name__ == '__main__':
 
     train_generator = data_generator(train_data, batch_size)
 
-    #model.load_weights('ckpt/pii_gp_best_b8_l256_e01_f1_0.92971.h5')
+    model.load_weights('ckpt/pii_gp_best_b4_l512_e11_f1_0.93980.h5')
 
     model.fit(
         train_generator.forfit(),
@@ -353,7 +353,7 @@ if __name__ == '__main__':
     )
 
 else:
-    model.load_weights('ckpt/pii_gp_best_b8_l256_e01_f1_0.92971.h5')
+    model.load_weights('ckpt/pii_gp_best_b4_l512_e09_f1_0.92763.h5')
     #predict_to_file('data/test2.json', 'data/submission.csv')
 
     #evl_to_file('data/test/diff_output2.json', 'data/output2.json')
