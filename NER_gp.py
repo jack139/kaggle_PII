@@ -59,8 +59,10 @@ def load_data(filename):
 
 # 标注数据
 #train_data = load_data('data/train.json')
-train_data = load_data('data/train_more.json')
-valid_data = load_data('data/dev.json')
+#train_data = load_data('data/train_more.json')
+#valid_data = load_data('data/dev.json')
+train_data = load_data('data/train/train_more.json')
+valid_data = load_data('data/dev/train.json')
 categories = list(sorted(categories))
 
 print("labels: ", categories)

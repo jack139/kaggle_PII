@@ -166,8 +166,8 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
 
                     if is_tmp_break: # 只记录有label的tmp_break
                         tmp_break += 1
-                        #if D[-1]['entities'][-1]['end_idx']==len(D[-1]['text'])-1:
-                        #    print('is_tmp_break in the tail: ', D[-1]['text'][:50])
+                        if len(D[-1]['entities'])>0 and D[-1]['entities'][-1]['end_idx']==len(D[-1]['text'])-1:
+                            print('is_tmp_break in the tail: ', D[-1]['text'][:50])
 
                 text = []
                 n_text = 0
@@ -206,8 +206,8 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
 
                 if is_tmp_break: # 只记录有label的tmp_break
                     tmp_break += 1
-                    #if D[-1]['entities'][-1]['end_idx']==len(D[-1]['text'])-1:
-                    #    print(D[-1]['text'][:30])
+                    if len(D[-1]['entities'])>0 and D[-1]['entities'][-1]['end_idx']==len(D[-1]['text'])-1:
+                        print(D[-1]['text'][:30])
 
             text_break += 1            
 
@@ -273,7 +273,7 @@ if __name__ == '__main__':
     #assemble(train_file, 'data', max_len=500, include_blank=False)
 
     # 使用 test 内容做 dev
-    assemble(train_file, 'data/train', max_len=500, include_blank=False, split_ratio=1)
+    assemble(train_file, 'data/train', max_len=500, include_blank=True, split_ratio=1)
     assemble(dev_file, 'data/dev', max_len=500, include_blank=True, split_ratio=1)
 
     assemble(test_file, 'data', max_len=500, include_blank=True, is_train=False)
