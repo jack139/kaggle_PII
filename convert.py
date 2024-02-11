@@ -11,12 +11,12 @@ from copy import deepcopy
 
 train_file = 'data/pii-detection-removal-from-educational-data/train.json'
 test_file = 'data/pii-detection-removal-from-educational-data/test.json'
+dev_file = 'data/gen_dev.json'
 
 train_43k = 'data/dataset_43k.json'
 train_43k_csv = 'data/dataset_43k_csv.json'
 train_10k = 'data/dataset_10k.json'
 
-split_ratio = 0.8
 
 random.seed(816)
 
@@ -110,7 +110,7 @@ def __convert(indata, include_blank=False):
 
 
 
-def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=False):
+def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=False, split_ratio = 0.8):
     total = text_break = tmp_break = 0
     D = []
 
@@ -166,8 +166,8 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
 
                     if is_tmp_break: # 只记录有label的tmp_break
                         tmp_break += 1
-                        if D[-1]['entities'][-1]['end_idx']==len(D[-1]['text'])-1:
-                            print('is_tmp_break in the tail: ', D[-1]['text'][:50])
+                        #if D[-1]['entities'][-1]['end_idx']==len(D[-1]['text'])-1:
+                        #    print('is_tmp_break in the tail: ', D[-1]['text'][:50])
 
                 text = []
                 n_text = 0
@@ -206,8 +206,8 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
 
                 if is_tmp_break: # 只记录有label的tmp_break
                     tmp_break += 1
-                    if D[-1]['entities'][-1]['end_idx']==len(D[-1]['text'])-1:
-                        print(D[-1]['text'][:30])
+                    #if D[-1]['entities'][-1]['end_idx']==len(D[-1]['text'])-1:
+                    #    print(D[-1]['text'][:30])
 
             text_break += 1            
 
@@ -269,5 +269,11 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
         print(f"test set: {len(D)}")
 
 if __name__ == '__main__':
-    assemble(train_file, 'data', max_len=500, include_blank=False)
-    assemble(test_file, 'data', max_len=500, is_train=False)
+    # 随机拆分 train 和 dev
+    #assemble(train_file, 'data', max_len=500, include_blank=False)
+
+    # 使用 test 内容做 dev
+    assemble(train_file, 'data/train', max_len=500, include_blank=False, split_ratio=1)
+    assemble(dev_file, 'data/dev', max_len=500, include_blank=True, split_ratio=1)
+
+    assemble(test_file, 'data', max_len=500, include_blank=True, is_train=False)
