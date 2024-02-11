@@ -142,10 +142,13 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
                 n_text += n_tmp
                 n_tmp = 0
 
-                tmp_break += 1
+                #tmp_break += 1
+                is_tmp_break = True
 
                 #print(text)
                 #assert False, f"tmp_text is too long: {len(text)}, {len(tmp_text)}, {len(token)}"
+            else:
+                is_tmp_break = True
 
             if n_text + n_tmp + token_len > max_len:
                 assert n_text>0, f"too long: {n_text}, {n_tmp}, {max_len}"
@@ -160,6 +163,12 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
                     #if not is_train:
                     dd['tokens'] = [x[0] for x in text]
                     D.append(dd)
+
+                    if is_tmp_break: # 只记录有label的tmp_break
+                        tmp_break += 1
+                        if D[-1]['entities'][-1]['end_idx']==len(D[-1]['text'])-1:
+                            print('is_tmp_break in the tail: ', D[-1]['text'][:50])
+
                 text = []
                 n_text = 0
 
@@ -194,6 +203,11 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
                 #if not is_train:
                 dd['tokens'] = [x[0] for x in text]
                 D.append(dd)
+
+                if is_tmp_break: # 只记录有label的tmp_break
+                    tmp_break += 1
+                    if D[-1]['entities'][-1]['end_idx']==len(D[-1]['text'])-1:
+                        print(D[-1]['text'][:30])
 
             text_break += 1            
 
