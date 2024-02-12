@@ -27,7 +27,7 @@ batch_size = 16 # 16 for base / 4 for large
 #maxlen = 256
 #batch_size = 32 # 32 for base / 8 for large 
 epochs = 30
-learning_rate = 2e-5 * (0.8 ** 2)
+learning_rate = 2e-5 #* (0.8 ** 2)
 categories = set()
 
 # bert配置
@@ -59,10 +59,8 @@ def load_data(filename):
 
 # 标注数据
 #train_data = load_data('data/train.json')
-#train_data = load_data('data/train_more.json')
-#valid_data = load_data('data/dev.json')
-train_data = load_data('data/train/train_more.json')
-valid_data = load_data('data/dev/train.json')
+train_data = load_data('data/train_more.json')
+valid_data = load_data('data/dev.json')
 categories = list(sorted(categories))
 
 print("labels: ", categories)
@@ -345,7 +343,7 @@ if __name__ == '__main__':
 
     train_generator = data_generator(train_data, batch_size)
 
-    model.load_weights('ckpt/pii_gp_best_b16_l512_e01_f1_0.97727.h5')
+    #model.load_weights('ckpt/pii_gp_best_b16_l512_e01_f1_0.97727.h5')
 
     model.fit(
         train_generator.forfit(),

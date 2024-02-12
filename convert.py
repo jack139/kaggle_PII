@@ -110,11 +110,20 @@ def __convert(indata, include_blank=False):
 
 
 
-def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=False, split_ratio = 0.8):
+def assemble(infile, outfile_path, max_len, is_train, include_blank, split_ratio):
     total = text_break = tmp_break = 0
-    D = []
+    D_train, D_dev, data_doc = [], [], []
 
     data = json.load(open(infile))
+    for l in tqdm(data):
+        #print(f"---> {l['document']}")
+        data_doc.append(l['document'])
+
+    # 拆分数据集
+    split_n = int(len(data_doc) * split_ratio)
+    random.shuffle(data_doc)
+
+    # 转换数据
     for l in tqdm(data):
         #print(f"---> {l['document']}")
 
@@ -162,12 +171,16 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
                     dd['document'] = l['document']
                     #if not is_train:
                     dd['tokens'] = [x[0] for x in text]
-                    D.append(dd)
+
+                    if dd['document'] in data_doc[:split_n]:
+                        D_train.append(dd)
+                    else:
+                        D_dev.append(dd)
 
                     if is_tmp_break: # 只记录有label的tmp_break
                         tmp_break += 1
-                        if len(D[-1]['entities'])>0 and D[-1]['entities'][-1]['end_idx']==len(D[-1]['text'])-1:
-                            print('is_tmp_break in the tail: ', D[-1]['text'][:50])
+                        if len(dd['entities'])>0 and dd['entities'][-1]['end_idx']==len(dd['text'])-1:
+                            print('is_tmp_break in the tail: ', dd['text'][:50])
 
                 text = []
                 n_text = 0
@@ -202,37 +215,39 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
                 dd['document'] = l['document']
                 #if not is_train:
                 dd['tokens'] = [x[0] for x in text]
-                D.append(dd)
+
+                if dd['document'] in data_doc[:split_n]:
+                    D_train.append(dd)
+                else:
+                    D_dev.append(dd)
 
                 if is_tmp_break: # 只记录有label的tmp_break
                     tmp_break += 1
-                    if len(D[-1]['entities'])>0 and D[-1]['entities'][-1]['end_idx']==len(D[-1]['text'])-1:
-                        print(D[-1]['text'][:30])
+                    if len(dd['entities'])>0 and dd['entities'][-1]['end_idx']==len(dd['text'])-1:
+                        print(dd['text'][:30])
 
-            text_break += 1            
+            text_break += 1
 
         #break # for test
 
     blank = 0
-    for x in D:
+    for x in D_train+D_dev:
         if len(x['entities'])==0:
             blank += 1
 
     print(f"total= {total}\ttext_break= {text_break}\ttmp_break= {tmp_break}\tblank= {blank}")
 
     if is_train:
-        random.shuffle(D)
-
-        # 拆分数据集
-        split_n = int(len(D) * split_ratio)
-
         # 增加外部数据
         data_43k = json.load(open(train_43k))
         data_43k_csv = json.load(open(train_43k_csv))
         data_10k = json.load(open(train_10k))        
 
         data_more = data_43k + data_43k_csv + data_10k
-        data_more += D[:split_n]
+        data_more += D_train
+        
+        random.shuffle(D_train)
+        random.shuffle(D_dev)
         random.shuffle(data_more)
 
         json.dump(
@@ -243,37 +258,75 @@ def assemble(infile, outfile_path, max_len=500, is_train=True, include_blank=Fal
         )
 
         json.dump(
-            D[:split_n],
+            D_train,
             open(os.path.join(outfile_path, "train.json"), 'w', encoding='utf-8'),
             indent=4,
             ensure_ascii=False
         )
 
         json.dump(
-            D[split_n:],
+            D_dev,
             open(os.path.join(outfile_path, "dev.json"), 'w', encoding='utf-8'),
             indent=4,
             ensure_ascii=False
         )
 
-        print(f"train_more set: {len(data_more)}\ttrain set: {split_n}\tdev set: {len(D)-split_n}")
+        print(f"train_more set: {len(data_more)}\ttrain set: {len(D_train)}\tdev set: {len(D_dev)}")
 
     else:
         json.dump(
-            D,
+            D_train + D_dev,
             open(os.path.join(outfile_path, "test.json"), 'w', encoding='utf-8'),
             indent=4,
             ensure_ascii=False
         )
 
-        print(f"test set: {len(D)}")
+        print(f"test set: {len(D_train)+len(D_dev)}")
 
 if __name__ == '__main__':
     # 随机拆分 train 和 dev
-    #assemble(train_file, 'data', max_len=500, include_blank=False)
+    assemble(train_file, 'data', max_len=500, include_blank=True, is_train=True, split_ratio=0.9)
+    # 生成测试数据 test
+    assemble(test_file, 'data', max_len=500, include_blank=True, is_train=False, split_ratio=1)
 
-    # 使用 test 内容做 dev
-    assemble(train_file, 'data/train', max_len=500, include_blank=True, split_ratio=1)
-    assemble(dev_file, 'data/dev', max_len=500, include_blank=True, split_ratio=1)
 
-    assemble(test_file, 'data', max_len=500, include_blank=True, is_train=False)
+
+'''
+test 先验结果：
+
+7, 9, B-NAME_STUDENT
+7, 10, I-NAME_STUDENT
+7, 482, B-NAME_STUDENT
+7, 483, I-NAME_STUDENT
+7, 741, B-NAME_STUDENT
+7, 742, I-NAME_STUDENT
+
+10, 0, B-NAME_STUDENT
+10, 1, I-NAME_STUDENT
+10, 464, B-NAME_STUDENT
+10, 465, I-NAME_STUDENT
+
+16, 4, B-NAME_STUDENT
+16, 5, I-NAME_STUDENT
+
+20, 5, B-NAME_STUDENT
+20, 6, I-NAME_STUDENT
+
+56, 12, B-NAME_STUDENT
+56, 13, I-NAME_STUDENT
+
+86, 6, B-NAME_STUDENT
+86, 7, I-NAME_STUDENT
+
+93, 0, B-NAME_STUDENT
+93, 1, I-NAME_STUDENT
+
+104, 8, B-NAME_STUDENT
+104, 9, I-NAME_STUDENT
+
+112, 5, B-NAME_STUDENT
+112, 6, I-NAME_STUDENT
+
+123, 32, B-NAME_STUDENT
+123, 33, I-NAME_STUDENT
+'''
