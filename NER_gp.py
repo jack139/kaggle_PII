@@ -20,18 +20,18 @@ from keras.models import Model
 from keras.callbacks import LearningRateScheduler
 from tqdm import tqdm
 
-keras.utils.set_random_seed(816)
+keras.utils.set_random_seed(1608)
 
 maxlen = 512
-batch_size = 16 # 16 for base / 4 for large
+batch_size = 4 # 16 for base / 4 for large
 #maxlen = 256
 #batch_size = 32 # 32 for base / 8 for large 
-epochs = 30
+epochs = 20
 learning_rate = 2e-5 #* (0.8 ** 2)
 categories = set()
 
 # bert配置
-
+'''
 config_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/bert_config.json'
 checkpoint_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/bert_model.ckpt'
 dict_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/vocab.txt'
@@ -39,7 +39,7 @@ dict_path = '../nlp_model/bert_uncased_L-12_H-768_A-12/vocab.txt'
 config_path = '../nlp_model/bert_wwm_uncased_L-24_H-1024_A-16/bert_config.json'
 checkpoint_path = '../nlp_model/bert_wwm_uncased_L-24_H-1024_A-16/bert_model.ckpt'
 dict_path = '../nlp_model/bert_wwm_uncased_L-24_H-1024_A-16/vocab.txt'
-'''
+
 
 def load_data(filename):
     """加载数据
@@ -58,9 +58,10 @@ def load_data(filename):
 
 
 # 标注数据
-#train_data = load_data('data/train.json')
-train_data = load_data('data/train_more.json')
-valid_data = load_data('data/dev.json')
+#train_data = load_data('data/w_blank/train.json')
+#valid_data = load_data('data/w_blank/dev.json')
+train_data = load_data('data/wo_blank/train_more.json')
+valid_data = load_data('data/wo_blank/dev.json')
 categories = list(sorted(categories))
 
 print("labels: ", categories)

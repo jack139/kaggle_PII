@@ -18,7 +18,7 @@ train_43k_csv = 'data/dataset_43k_csv.json'
 train_10k = 'data/dataset_10k.json'
 
 
-random.seed(816)
+random.seed(1608)
 
 dict_path = '../nlp_model/bert_wwm_uncased_L-24_H-1024_A-16/vocab.txt'
 tokenizer = Tokenizer(dict_path, do_lower_case=True)
@@ -110,7 +110,10 @@ def __convert(indata, include_blank=False):
 
 
 
-def assemble(infile, outfile_path, max_len, is_train, include_blank, split_ratio):
+def assemble(infile, outfile_path, max_len, is_train, include_blank, split_ratio, extra_data):
+
+    os.makedirs(outfile_path, exist_ok=True)
+
     total = text_break = tmp_break = 0
     D_train, D_dev, data_doc = [], [], []
 
@@ -239,23 +242,27 @@ def assemble(infile, outfile_path, max_len, is_train, include_blank, split_ratio
 
     if is_train:
         # 增加外部数据
-        data_43k = json.load(open(train_43k))
-        data_43k_csv = json.load(open(train_43k_csv))
-        data_10k = json.load(open(train_10k))        
+        if extra_data:
+            data_43k = json.load(open(train_43k))
+            data_43k_csv = json.load(open(train_43k_csv))
+            data_10k = json.load(open(train_10k))        
 
-        data_more = data_43k + data_43k_csv + data_10k
-        data_more += D_train
-        
+            data_more = data_43k + data_43k_csv + data_10k
+            data_more += D_train
+            
+            random.shuffle(data_more)
+
+            json.dump(
+                data_more,
+                open(os.path.join(outfile_path, "train_more.json"), 'w', encoding='utf-8'),
+                indent=4,
+                ensure_ascii=False
+            )
+
+            print(f"train_more set: {len(data_more)}")
+
         random.shuffle(D_train)
         random.shuffle(D_dev)
-        random.shuffle(data_more)
-
-        json.dump(
-            data_more,
-            open(os.path.join(outfile_path, "train_more.json"), 'w', encoding='utf-8'),
-            indent=4,
-            ensure_ascii=False
-        )
 
         json.dump(
             D_train,
@@ -271,7 +278,7 @@ def assemble(infile, outfile_path, max_len, is_train, include_blank, split_ratio
             ensure_ascii=False
         )
 
-        print(f"train_more set: {len(data_more)}\ttrain set: {len(D_train)}\tdev set: {len(D_dev)}")
+        print(f"train set: {len(D_train)}\tdev set: {len(D_dev)}")
 
     else:
         json.dump(
@@ -285,9 +292,10 @@ def assemble(infile, outfile_path, max_len, is_train, include_blank, split_ratio
 
 if __name__ == '__main__':
     # 随机拆分 train 和 dev
-    assemble(train_file, 'data', max_len=500, include_blank=True, is_train=True, split_ratio=0.9)
+    #assemble(train_file, 'data/wo_blank', max_len=500, include_blank=False, is_train=True, split_ratio=0.8, extra_data=True)
+    #assemble(train_file, 'data/w_blank', max_len=500, include_blank=True, is_train=True, split_ratio=0.9, extra_data=False)
     # 生成测试数据 test
-    assemble(test_file, 'data', max_len=500, include_blank=True, is_train=False, split_ratio=1)
+    assemble(test_file, 'data', max_len=500, include_blank=True, is_train=False, split_ratio=1, extra_data=False)
 
 
 
