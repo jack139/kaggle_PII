@@ -27,7 +27,7 @@ batch_size = 16 # 16 for base / 4 for large
 #maxlen = 256
 #batch_size = 32 # 32 for base / 8 for large 
 epochs = 30
-learning_rate = 2e-5 #* (0.8 ** 10)
+learning_rate = 2e-5 * (0.8 ** 2)
 categories = set()
 
 # bert配置
@@ -345,7 +345,7 @@ if __name__ == '__main__':
 
     train_generator = data_generator(train_data, batch_size)
 
-    #model.load_weights('ckpt/pii_gp_best_b4_l512_e11_f1_0.93980.h5')
+    model.load_weights('ckpt/pii_gp_best_b16_l512_e01_f1_0.97727.h5')
 
     model.fit(
         train_generator.forfit(),
@@ -355,8 +355,8 @@ if __name__ == '__main__':
     )
 
 else:
-    model.load_weights('ckpt/pii_gp_best_b4_l512_e11_f1_0.93980.h5')
-    predict_to_file('data/test2.json', 'data/submission.csv')
+    model.load_weights('ckpt/pii_gp_best_b16_l512_e00_f1_0.99145.h5')
+    predict_to_file('data/test.json', 'data/submission.csv')
 
     #evl_to_file('data/test/diff_output2.json', 'data/output2.json')
     #evl_to_file('data/dev.json', 'data/output2.json')
