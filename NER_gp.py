@@ -27,7 +27,7 @@ batch_size = 4 # 16 for base / 4 for large
 #maxlen = 256
 #batch_size = 32 # 32 for base / 8 for large 
 epochs = 20
-learning_rate = 2e-5 #* (0.8 ** 2)
+learning_rate = 2e-5 * (0.8 ** 5)
 categories = set()
 
 # bert配置
@@ -344,7 +344,7 @@ if __name__ == '__main__':
 
     train_generator = data_generator(train_data, batch_size)
 
-    #model.load_weights('ckpt/pii_gp_best_b16_l512_e01_f1_0.97727.h5')
+    model.load_weights('ckpt/pii_gp_best_b4_l512_e05_f1_0.88856.h5')
 
     model.fit(
         train_generator.forfit(),
