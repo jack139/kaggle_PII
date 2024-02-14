@@ -27,7 +27,7 @@ batch_size = 4 # 16 for base / 4 for large
 #maxlen = 256
 #batch_size = 32 # 32 for base / 8 for large 
 epochs = 20
-learning_rate = 2e-5 * (0.8 ** 5)
+learning_rate = 2e-5 #* (0.8 ** 5)
 categories = set()
 
 # bert配置
@@ -58,12 +58,14 @@ def load_data(filename):
 
 
 # 标注数据
+#train_data = load_data('data/wo_blank/train_more.json')
+#train_data = load_data('data/wo_blank/train.json')
+#valid_data = load_data('data/wo_blank/dev.json')
+train_data = load_data('data/w_blank/train_more.json')
 #train_data = load_data('data/w_blank/train.json')
-#valid_data = load_data('data/w_blank/dev.json')
-train_data = load_data('data/wo_blank/train_more.json')
-valid_data = load_data('data/wo_blank/dev.json')
-categories = list(sorted(categories))
+valid_data = load_data('data/w_blank/dev.json')
 
+categories = list(sorted(categories))
 print("labels: ", categories)
 # labels:  ['EMAIL', 'ID_NUM', 'NAME_STUDENT', 'PHONE_NUM', 'STREET_ADDRESS', 'URL_PERSONAL', 'USERNAME']
 
@@ -344,7 +346,7 @@ if __name__ == '__main__':
 
     train_generator = data_generator(train_data, batch_size)
 
-    model.load_weights('ckpt/pii_gp_best_b4_l512_e05_f1_0.88856.h5')
+    #model.load_weights('ckpt/pii_gp_best_b4_l512_e15_f1_0.90882.h5')
 
     model.fit(
         train_generator.forfit(),
@@ -354,8 +356,6 @@ if __name__ == '__main__':
     )
 
 else:
-    model.load_weights('ckpt/pii_gp_best_b16_l512_e00_f1_0.99145.h5')
-    predict_to_file('data/test.json', 'data/submission.csv')
-
-    #evl_to_file('data/test/diff_output2.json', 'data/output2.json')
-    #evl_to_file('data/dev.json', 'data/output2.json')
+    model.load_weights('ckpt/pii_gp_best_b4_l512_e15_f1_0.90882.h5')
+    #predict_to_file('data/test.json', 'data/submission.csv')
+    evl_to_file('data/w_blank/dev.json', 'data/output2.json')
