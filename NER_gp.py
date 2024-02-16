@@ -58,12 +58,13 @@ def load_data(filename):
 
 
 # 标注数据
-#train_data = load_data('data/wo_blank/train_more.json')
+#train_data = load_data('data/train_filter.json')
+train_data = load_data('data/wo_blank/train_more.json')
 #train_data = load_data('data/wo_blank/train.json')
-#valid_data = load_data('data/wo_blank/dev.json')
-train_data = load_data('data/w_blank/train_more.json')
+valid_data = load_data('data/wo_blank/dev.json')
+#train_data = load_data('data/w_blank/train_more.json')
 #train_data = load_data('data/w_blank/train.json')
-valid_data = load_data('data/w_blank/dev.json')
+#valid_data = load_data('data/w_blank/dev.json')
 
 categories = list(sorted(categories))
 print("labels: ", categories)
@@ -330,12 +331,37 @@ def evl_to_file(in_file, out_file):
     )
 
 
+def filter_file(in_file, out_file):
+    """过滤掉能正确检测结果为空的数据
+    """
+    D = []
+    data = json.load(open(in_file))
+
+    for d in tqdm(data, ncols=100):
+        if len(d['entities'])>0:
+            D.append(d)
+            continue
+        entities = NER.recognize(d['text'])
+        if len(entities)>0:
+            D.append(d)
+
+    # 保存json格式
+    json.dump(
+        D,
+        open(out_file, 'w', encoding='utf-8'),
+        indent=4,
+        ensure_ascii=False
+    )
+
+    print(f"{len(data)} --> {len(D)}")
+
+
 def lr_step_decay(epoch):
     """ lr 衰减函数
     """
     drop = 0.8
     epochs_drop = 1.0
-    lrate = learning_rate * math.pow(drop, math.floor((1+epoch)/epochs_drop))
+    lrate = learning_rate * math.pow(drop, math.floor((epoch)/epochs_drop))
     return lrate
 
 
@@ -346,7 +372,7 @@ if __name__ == '__main__':
 
     train_generator = data_generator(train_data, batch_size)
 
-    #model.load_weights('ckpt/pii_gp_best_b4_l512_e15_f1_0.90882.h5')
+    #model.load_weights('ckpt/pii_gp_best_b16_l512_e04_f1_0.46468.h5')
 
     model.fit(
         train_generator.forfit(),
@@ -356,6 +382,7 @@ if __name__ == '__main__':
     )
 
 else:
-    model.load_weights('ckpt/pii_gp_best_b4_l512_e15_f1_0.90882.h5')
+    model.load_weights('ckpt/pii_gp_best_b16_l512_e04_f1_0.46468.h5')
     #predict_to_file('data/test.json', 'data/submission.csv')
-    evl_to_file('data/w_blank/dev.json', 'data/output2.json')
+    #evl_to_file('data/w_blank/dev.json', 'data/output2.json')
+    filter_file('data/w_blank/train_more.json', 'data/train_filter.json')

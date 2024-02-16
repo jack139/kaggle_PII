@@ -247,7 +247,8 @@ def assemble(infile, outfile_path, max_len, is_train, include_blank, split_ratio
             data_43k_csv = json.load(open(train_43k_csv))
             data_10k = json.load(open(train_10k))        
 
-            data_more = data_43k + data_43k_csv + data_10k
+            #data_more = data_43k + data_43k_csv + data_10k
+            data_more = data_43k
             data_more += D_train
             
             random.shuffle(data_more)
@@ -292,10 +293,10 @@ def assemble(infile, outfile_path, max_len, is_train, include_blank, split_ratio
 
 if __name__ == '__main__':
     # 随机拆分 train 和 dev
-    assemble(train_file, 'data/wo_blank', max_len=500, include_blank=False, is_train=True, split_ratio=0.8, extra_data=True)
+    #assemble(train_file, 'data/wo_blank', max_len=500, include_blank=False, is_train=True, split_ratio=0.9, extra_data=True)
     assemble(train_file, 'data/w_blank', max_len=500, include_blank=True, is_train=True, split_ratio=0.9, extra_data=True)
     # 生成测试数据 test
-    assemble(test_file, 'data', max_len=500, include_blank=True, is_train=False, split_ratio=1, extra_data=False)
+    #assemble(test_file, 'data', max_len=500, include_blank=True, is_train=False, split_ratio=1, extra_data=False)
 
 
 
